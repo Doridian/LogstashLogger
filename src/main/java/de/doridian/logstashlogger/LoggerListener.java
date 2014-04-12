@@ -103,10 +103,9 @@ public class LoggerListener implements Listener {
 			case HOPPER:
 				Hopper hopper = (Hopper)holder;
 				return new LocationAndMaterial(hopper.getLocation(), hopper.getType());
+			case CREATIVE:
 			case PLAYER:
 				return new LocationAndMaterial(getOwnerOfInventory(inventory).getLocation(), Material.AIR);
-
-			case CREATIVE:
 			case ENDER_CHEST:
 			case ENCHANTING:
 			case WORKBENCH:
@@ -131,11 +130,11 @@ public class LoggerListener implements Listener {
 			final int amount;
 			final Player player;
 			final LocationAndMaterial locationAndMaterial;
-			if (destination.getType() == InventoryType.PLAYER) {
+			if (destination.getType() == InventoryType.PLAYER || destination.getType() == InventoryType.CREATIVE) {
 				amount = -itemStack.getAmount();
 				player = getOwnerOfInventory(destination);
 				locationAndMaterial = getLocationAndMaterialOfInventory(source);
-			} else if (source.getType() == InventoryType.PLAYER) {
+			} else if (source.getType() == InventoryType.PLAYER || source.getType() == InventoryType.CREATIVE) {
 				amount = itemStack.getAmount();
 				player = getOwnerOfInventory(source);
 				locationAndMaterial = getLocationAndMaterialOfInventory(destination);
