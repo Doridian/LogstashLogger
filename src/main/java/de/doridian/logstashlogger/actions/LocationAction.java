@@ -3,7 +3,7 @@ package de.doridian.logstashlogger.actions;
 import org.bukkit.Location;
 import org.json.simple.JSONObject;
 
-public class LocationAction extends BaseAction {
+public abstract class LocationAction extends BaseAction {
 	private final Location location;
 
 	public LocationAction(String action, Location location) {

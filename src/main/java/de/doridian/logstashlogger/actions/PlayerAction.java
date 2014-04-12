@@ -7,7 +7,7 @@ public class PlayerAction extends BaseAction {
 	private final Player user;
 
 	public PlayerAction(Player user, String action) {
-		super(action);
+		super("player_" + action);
 		this.user = user;
 	}
 

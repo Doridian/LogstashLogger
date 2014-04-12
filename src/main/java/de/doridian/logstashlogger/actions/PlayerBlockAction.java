@@ -9,7 +9,7 @@ public class PlayerBlockAction extends PlayerAndLocationAction {
 	private final Material material;
 
 	public PlayerBlockAction(Player user, String action, Block block) {
-		super(user, action, block.getLocation());
+		super(user, "block_" + action, block.getLocation());
 		this.material = block.getType();
 	}
 

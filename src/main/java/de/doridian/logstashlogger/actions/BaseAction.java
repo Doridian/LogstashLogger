@@ -9,7 +9,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-public class BaseAction {
+public abstract class BaseAction {
 	private final Date timestamp = new Date();
 	private final String action;
 
