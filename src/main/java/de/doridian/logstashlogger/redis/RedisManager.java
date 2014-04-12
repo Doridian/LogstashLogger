@@ -1,4 +1,4 @@
-package de.doridian.logstashlogger;
+package de.doridian.logstashlogger.redis;
 
 import de.doridian.logstashlogger.config.Configuration;
 import redis.clients.jedis.JedisPool;
