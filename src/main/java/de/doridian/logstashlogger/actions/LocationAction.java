@@ -13,7 +13,7 @@ public class LocationAction extends BaseAction {
 
 	@Override
 	public JSONObject toJSONObject() {
-		final JSONObject thisBlockChange = new JSONObject();
+		final JSONObject thisBlockChange = super.toJSONObject();
 		thisBlockChange.put("x", location.getX());
 		thisBlockChange.put("y", location.getY());
 		thisBlockChange.put("z", location.getZ());

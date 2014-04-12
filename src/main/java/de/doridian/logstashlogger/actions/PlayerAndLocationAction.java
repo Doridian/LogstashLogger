@@ -16,7 +16,7 @@ public abstract class PlayerAndLocationAction extends BaseAction {
 
 	@Override
 	public JSONObject toJSONObject() {
-		final JSONObject thisBlockChange = new JSONObject();
+		final JSONObject thisBlockChange = super.toJSONObject();
 
 		thisBlockChange.put("username", user.getName());
 		thisBlockChange.put("useruuid", user.getUniqueId().toString());

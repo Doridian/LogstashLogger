@@ -13,7 +13,7 @@ public class PlayerChatAction extends PlayerAction {
 
 	@Override
 	public JSONObject toJSONObject() {
-		final JSONObject thisBlockChange = new JSONObject();
+		final JSONObject thisBlockChange = super.toJSONObject();
 		thisBlockChange.put("message", message);
 		return thisBlockChange;
 	}
