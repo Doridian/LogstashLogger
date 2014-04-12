@@ -5,10 +5,10 @@ import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
 import org.json.simple.JSONObject;
 
-public class BlockChangeAction extends LocationAction {
+public class PlayerBlockAction extends PlayerAndLocationAction {
 	private final Material material;
 
-	public BlockChangeAction(Player user, String action, Block block) {
+	public PlayerBlockAction(Player user, String action, Block block) {
 		super(user, action, block.getLocation());
 		this.material = block.getType();
 	}

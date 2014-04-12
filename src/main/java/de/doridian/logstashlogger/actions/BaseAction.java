@@ -1,7 +1,6 @@
 package de.doridian.logstashlogger.actions;
 
 import de.doridian.logstashlogger.config.Configuration;
-import org.bukkit.entity.Player;
 import org.json.simple.JSONObject;
 
 import java.net.InetAddress;
@@ -10,9 +9,8 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-public abstract class BaseAction {
+public class BaseAction {
 	private final Date timestamp = new Date();
-	private final Player user;
 	private final String action;
 
 	private static final String HOSTNAME;
@@ -34,8 +32,7 @@ public abstract class BaseAction {
 		JSON_DATE_FORMAT = df;
 	}
 
-	public BaseAction(Player user, String action) {
-		this.user = user;
+	public BaseAction(String action) {
 		this.action = action;
 	}
 
@@ -46,8 +43,6 @@ public abstract class BaseAction {
 		thisBlockChange.put("@timestamp", JSON_DATE_FORMAT.format(timestamp));
 		thisBlockChange.put("type", "minecraft_action");
 
-		thisBlockChange.put("username", user.getName());
-		thisBlockChange.put("useruuid", user.getUniqueId().toString());
 		thisBlockChange.put("action", action);
 
 		thisBlockChange.put("host", HOSTNAME);

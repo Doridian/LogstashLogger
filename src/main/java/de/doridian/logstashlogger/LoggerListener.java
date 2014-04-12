@@ -1,6 +1,6 @@
 package de.doridian.logstashlogger;
 
-import de.doridian.logstashlogger.actions.BlockChangeAction;
+import de.doridian.logstashlogger.actions.PlayerBlockAction;
 import de.doridian.logstashlogger.actions.PlayerAction;
 import de.doridian.logstashlogger.actions.PlayerChatAction;
 import de.doridian.logstashlogger.redis.RedisQueueThread;
@@ -17,7 +17,7 @@ import org.bukkit.event.player.PlayerQuitEvent;
 
 public class LoggerListener implements Listener {
 	private void addBlockChange(Player user, String action, Block block) {
-		RedisQueueThread.queueAction(new BlockChangeAction(user, action, block));
+		RedisQueueThread.queueAction(new PlayerBlockAction(user, action, block));
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR)
