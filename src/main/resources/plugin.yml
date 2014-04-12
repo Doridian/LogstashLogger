@@ -1,0 +1,3 @@
+name: LogstashLogger
+main: de.doridian.logstashlogger.LogstashLoggerPlugin
+version: 1.0.0
