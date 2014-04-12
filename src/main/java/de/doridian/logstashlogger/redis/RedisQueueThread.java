@@ -1,16 +1,16 @@
 package de.doridian.logstashlogger.redis;
 
-import de.doridian.logstashlogger.actions.BaseJSONAction;
+import de.doridian.logstashlogger.actions.BaseAction;
 import redis.clients.jedis.Jedis;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class RedisQueueThread extends Thread {
-	private static final Queue<BaseJSONAction> actionsQueue = new ConcurrentLinkedQueue<>();
+	private static final Queue<BaseAction> actionsQueue = new ConcurrentLinkedQueue<>();
 
-	public static void queueAction(BaseJSONAction baseJSONAction) {
-		actionsQueue.add(baseJSONAction);
+	public static void queueAction(BaseAction baseAction) {
+		actionsQueue.add(baseAction);
 	}
 
 	@Override
@@ -20,7 +20,7 @@ public class RedisQueueThread extends Thread {
 				final Jedis jedis = RedisManager.jedisPool.getResource();
 				try {
 					while (!actionsQueue.isEmpty()) {
-						BaseJSONAction actionObject = actionsQueue.poll();
+						BaseAction actionObject = actionsQueue.poll();
 						if (actionObject == null)
 							continue;
 						jedis.lpush("logstash", actionObject.toJSONObject().toJSONString());

@@ -10,7 +10,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.TimeZone;
 
-public abstract class BaseJSONAction {
+public abstract class BaseAction {
 	private final Date timestamp = new Date();
 	private final Player user;
 	private final String action;
@@ -34,7 +34,7 @@ public abstract class BaseJSONAction {
 		JSON_DATE_FORMAT = df;
 	}
 
-	public BaseJSONAction(Player user, String action) {
+	public BaseAction(Player user, String action) {
 		this.user = user;
 		this.action = action;
 	}

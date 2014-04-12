@@ -4,10 +4,10 @@ import org.bukkit.Location;
 import org.bukkit.entity.Player;
 import org.json.simple.JSONObject;
 
-public class LocationJSONAction extends BaseJSONAction {
+public abstract class LocationAction extends BaseAction {
 	private final Location location;
 
-	public LocationJSONAction(Player user, String action, Location location) {
+	public LocationAction(Player user, String action, Location location) {
 		super(user, action);
 		this.location = location;
 	}
