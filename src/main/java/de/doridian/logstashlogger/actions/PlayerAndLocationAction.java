@@ -1,13 +1,14 @@
 package de.doridian.logstashlogger.actions;
 
 import org.bukkit.Location;
+import org.bukkit.entity.HumanEntity;
 import org.bukkit.entity.Player;
 import org.json.simple.JSONObject;
 
 public abstract class PlayerAndLocationAction extends PlayerAction {
 	private final Location location;
 
-	public PlayerAndLocationAction(Player user, String action, Location location) {
+	public PlayerAndLocationAction(HumanEntity user, String action, Location location) {
 		super(user, action);
 		this.location = location;
 	}

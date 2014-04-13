@@ -1,12 +1,12 @@
 package de.doridian.logstashlogger.actions;
 
-import org.bukkit.entity.Player;
+import org.bukkit.entity.HumanEntity;
 import org.json.simple.JSONObject;
 
 public class PlayerAction extends BaseAction {
-	private final Player user;
+	private final HumanEntity user;
 
-	public PlayerAction(Player user, String action) {
+	public PlayerAction(HumanEntity user, String action) {
 		super("player_" + action);
 		this.user = user;
 	}

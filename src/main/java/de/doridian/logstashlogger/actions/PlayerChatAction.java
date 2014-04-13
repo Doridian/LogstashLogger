@@ -1,12 +1,12 @@
 package de.doridian.logstashlogger.actions;
 
-import org.bukkit.entity.Player;
+import org.bukkit.entity.HumanEntity;
 import org.json.simple.JSONObject;
 
 public class PlayerChatAction extends PlayerAction {
 	private final String message;
 
-	public PlayerChatAction(Player user, String message) {
+	public PlayerChatAction(HumanEntity user, String message) {
 		super(user, "chat");
 		this.message = message;
 	}

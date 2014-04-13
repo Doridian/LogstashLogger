@@ -2,14 +2,14 @@ package de.doridian.logstashlogger.actions;
 
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.HumanEntity;
 import org.json.simple.JSONObject;
 
 public class PlayerBlockAction extends PlayerAndLocationAction {
 	private final Material materialBefore;
 	private final Material materialAfter;
 
-	public PlayerBlockAction(Player user, Location location, Material materialBefore, Material materialAfter) {
+	public PlayerBlockAction(HumanEntity user, Location location, Material materialBefore, Material materialAfter) {
 		super(user, "block_change", location);
 		this.materialBefore = materialBefore;
 		this.materialAfter = materialAfter;
