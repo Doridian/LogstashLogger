@@ -1,6 +1,6 @@
 package de.doridian.logstashlogger.actions;
 
-import de.doridian.logstashlogger.config.Configuration;
+import de.doridian.logstashlogger.LogstashLogger;
 import org.json.simple.JSONObject;
 
 import java.net.InetAddress;
@@ -46,7 +46,7 @@ public abstract class BaseAction {
 		thisBlockChange.put("action", action);
 
 		thisBlockChange.put("host", HOSTNAME);
-		thisBlockChange.put("server", Configuration.getValue("server-name", "N/A"));
+		thisBlockChange.put("server", LogstashLogger.instance.configuration.getValue("server-name", "N/A"));
 
 		return thisBlockChange;
 	}
