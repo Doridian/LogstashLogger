@@ -7,7 +7,12 @@ import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class RedisQueueThread extends Thread {
-	private static final Queue<BaseAction> actionsQueue = new ConcurrentLinkedQueue<>();
+    public RedisQueueThread() {
+        setName("LogstashLogger-RedisQueueThread");
+        setDaemon(true);
+    }
+
+    private static final Queue<BaseAction> actionsQueue = new ConcurrentLinkedQueue<>();
 
 	public static void queueAction(BaseAction baseAction) {
 		actionsQueue.add(baseAction);
