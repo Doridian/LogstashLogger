@@ -15,12 +15,14 @@ public class LogstashLogger extends JavaPlugin {
 
     public Configuration configuration;
 
+    public RedisManager redisManager;
+
 	@Override
 	public void onEnable() {
 		instance = this;
 		super.onEnable();
         configuration = new Configuration(getDataFolder());
-		RedisManager.initialize(configuration);
+        redisManager = new RedisManager(configuration);
 
 		listener = new LoggerListener();
 		redisQueueThread = new RedisQueueThread();

@@ -1,6 +1,7 @@
 package de.doridian.logstashlogger.redis;
 
 import de.doridian.dependencies.redis.RedisManager;
+import de.doridian.logstashlogger.LogstashLogger;
 import de.doridian.logstashlogger.actions.BaseAction;
 
 import java.util.Queue;
@@ -27,7 +28,7 @@ public class RedisQueueThread extends Thread {
 						BaseAction actionObject = actionsQueue.poll();
 						if (actionObject == null)
 							continue;
-                        RedisManager.lpush("logstash", actionObject.toJSONObject().toJSONString());
+                        LogstashLogger.instance.redisManager.lpush("logstash", actionObject.toJSONObject().toJSONString());
 					}
 				} catch (Exception e) {
 					e.printStackTrace();
