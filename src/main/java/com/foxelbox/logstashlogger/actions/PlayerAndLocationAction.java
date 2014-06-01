@@ -14,26 +14,30 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with LogstashLogger.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.doridian.logstashlogger.actions;
+package com.foxelbox.logstashlogger.actions;
 
 import org.bukkit.Location;
+import org.bukkit.entity.HumanEntity;
+import org.bukkit.entity.Player;
 import org.json.simple.JSONObject;
 
-public abstract class LocationAction extends BaseAction {
+public abstract class PlayerAndLocationAction extends PlayerAction {
 	private final Location location;
 
-	public LocationAction(String action, Location location) {
-		super(action);
+	public PlayerAndLocationAction(HumanEntity user, String action, Location location) {
+		super(user, action);
 		this.location = location;
 	}
 
 	@Override
 	public JSONObject toJSONObject() {
 		final JSONObject thisBlockChange = super.toJSONObject();
+
 		thisBlockChange.put("x", location.getX());
 		thisBlockChange.put("y", location.getY());
 		thisBlockChange.put("z", location.getZ());
 		thisBlockChange.put("world", location.getWorld().getName());
+
 		return thisBlockChange;
 	}
 }

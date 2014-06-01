@@ -14,11 +14,11 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with LogstashLogger.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.doridian.logstashlogger;
+package com.foxelbox.logstashlogger;
 
-import de.doridian.dependencies.config.Configuration;
-import de.doridian.dependencies.redis.RedisManager;
-import de.doridian.logstashlogger.redis.RedisQueueThread;
+import com.foxelbox.dependencies.config.Configuration;
+import com.foxelbox.dependencies.redis.RedisManager;
+import com.foxelbox.logstashlogger.redis.RedisQueueThread;
 import org.bukkit.plugin.java.JavaPlugin;
 
 public class LogstashLogger extends JavaPlugin {

@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with LogstashLogger.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.doridian.logstashlogger.util;
+package com.foxelbox.logstashlogger.util;
 
 import org.bukkit.Location;
 import org.bukkit.Material;

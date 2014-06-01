@@ -14,11 +14,11 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with LogstashLogger.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.doridian.logstashlogger.redis;
+package com.foxelbox.logstashlogger.redis;
 
-import de.doridian.dependencies.redis.RedisManager;
-import de.doridian.logstashlogger.LogstashLogger;
-import de.doridian.logstashlogger.actions.BaseAction;
+import com.foxelbox.dependencies.redis.RedisManager;
+import com.foxelbox.logstashlogger.LogstashLogger;
+import com.foxelbox.logstashlogger.actions.BaseAction;
 
 import java.util.Queue;
 import java.util.concurrent.ConcurrentLinkedQueue;

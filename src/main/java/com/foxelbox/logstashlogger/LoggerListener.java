@@ -14,14 +14,14 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with LogstashLogger.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.doridian.logstashlogger;
+package com.foxelbox.logstashlogger;
 
-import de.doridian.logstashlogger.actions.PlayerAction;
-import de.doridian.logstashlogger.actions.PlayerBlockAction;
-import de.doridian.logstashlogger.actions.PlayerChatAction;
-import de.doridian.logstashlogger.actions.PlayerInventoryAction;
-import de.doridian.logstashlogger.redis.RedisQueueThread;
-import de.doridian.logstashlogger.util.BukkitUtils;
+import com.foxelbox.logstashlogger.actions.PlayerAction;
+import com.foxelbox.logstashlogger.actions.PlayerBlockAction;
+import com.foxelbox.logstashlogger.actions.PlayerChatAction;
+import com.foxelbox.logstashlogger.actions.PlayerInventoryAction;
+import com.foxelbox.logstashlogger.redis.RedisQueueThread;
+import com.foxelbox.logstashlogger.util.BukkitUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;

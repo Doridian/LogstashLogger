@@ -14,23 +14,24 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with LogstashLogger.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.doridian.logstashlogger.actions;
+package com.foxelbox.logstashlogger.actions;
 
 import org.bukkit.entity.HumanEntity;
 import org.json.simple.JSONObject;
 
-public class PlayerChatAction extends PlayerAction {
-	private final String message;
+public class PlayerAction extends BaseAction {
+	private final HumanEntity user;
 
-	public PlayerChatAction(HumanEntity user, String message) {
-		super(user, "chat");
-		this.message = message;
+	public PlayerAction(HumanEntity user, String action) {
+		super("player_" + action);
+		this.user = user;
 	}
 
 	@Override
 	public JSONObject toJSONObject() {
 		final JSONObject thisBlockChange = super.toJSONObject();
-		thisBlockChange.put("message", message);
+		thisBlockChange.put("username", user.getName());
+		thisBlockChange.put("useruuid", user.getUniqueId().toString());
 		return thisBlockChange;
 	}
 }

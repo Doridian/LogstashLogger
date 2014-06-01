@@ -14,9 +14,9 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with LogstashLogger.  If not, see <http://www.gnu.org/licenses/>.
  */
-package de.doridian.logstashlogger.actions;
+package com.foxelbox.logstashlogger.actions;
 
-import de.doridian.logstashlogger.LogstashLogger;
+import com.foxelbox.logstashlogger.LogstashLogger;
 import org.json.simple.JSONObject;
 
 import java.net.InetAddress;
