@@ -18,6 +18,7 @@ package com.foxelbox.logstashlogger;
 
 import com.foxelbox.dependencies.config.Configuration;
 import com.foxelbox.dependencies.redis.RedisManager;
+import com.foxelbox.dependencies.threading.SimpleThreadCreator;
 import com.foxelbox.logstashlogger.redis.RedisQueueThread;
 import org.bukkit.plugin.java.JavaPlugin;
 
@@ -38,7 +39,7 @@ public class LogstashLogger extends JavaPlugin {
 		instance = this;
 		super.onEnable();
         configuration = new Configuration(getDataFolder());
-        redisManager = new RedisManager(configuration);
+        redisManager = new RedisManager(new SimpleThreadCreator(), configuration);
 
 		listener = new LoggerListener();
 		redisQueueThread = new RedisQueueThread();
