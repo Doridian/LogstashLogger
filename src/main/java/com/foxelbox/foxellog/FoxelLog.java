@@ -22,13 +22,11 @@ import com.foxelbox.foxellog.commands.FLCommand;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.elasticsearch.client.Client;
 import org.elasticsearch.common.settings.ImmutableSettings;
-import org.elasticsearch.common.xcontent.XContent;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.common.xcontent.XContentFactory;
+import org.elasticsearch.indices.IndexAlreadyExistsException;
 import org.elasticsearch.node.Node;
 import org.elasticsearch.node.NodeBuilder;
 
-import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
@@ -87,7 +85,11 @@ public class FoxelLog extends JavaPlugin {
 	}
 
     private void registerIndices() throws IOException {
-        elasticsearchClient.admin().indices().prepareCreate(getIndexName()).execute().actionGet();
+        try {
+            elasticsearchClient.admin().indices().prepareCreate(getIndexName()).execute().actionGet();
+        } catch (IndexAlreadyExistsException e) {
+            return;
+        }
 
         for(String actionType : BaseAction.getTypes()) {
             Map<String, Map<String, Object>> fieldMappings = BaseAction.getCustomMappingsByType(actionType);

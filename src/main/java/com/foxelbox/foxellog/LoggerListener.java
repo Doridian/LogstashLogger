@@ -16,7 +16,9 @@
  */
 package com.foxelbox.foxellog;
 
-import com.foxelbox.foxellog.actions.*;
+import com.foxelbox.foxellog.actions.BaseAction;
+import com.foxelbox.foxellog.actions.PlayerBlockAction;
+import com.foxelbox.foxellog.actions.PlayerInventoryAction;
 import com.foxelbox.foxellog.util.BukkitUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -30,7 +32,7 @@ import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.event.inventory.InventoryOpenEvent;
-import org.bukkit.event.player.*;
+import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.elasticsearch.common.xcontent.XContentFactory;

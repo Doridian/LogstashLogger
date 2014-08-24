@@ -18,7 +18,6 @@ package com.foxelbox.foxellog.actions;
 
 import org.bukkit.entity.HumanEntity;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.search.SearchHitField;
 
 import java.io.IOException;
 import java.util.Map;

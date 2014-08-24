@@ -16,14 +16,10 @@
  */
 package com.foxelbox.foxellog.actions;
 
-import com.foxelbox.foxellog.FoxelLog;
 import com.foxelbox.foxellog.util.ClassUtils;
 import org.elasticsearch.common.joda.time.format.DateTimeFormatter;
 import org.elasticsearch.common.joda.time.format.ISODateTimeFormat;
-import org.elasticsearch.common.xcontent.XContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.search.SearchHitField;
 import org.objenesis.ObjenesisStd;
 
 import java.io.IOException;
