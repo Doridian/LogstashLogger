@@ -93,7 +93,7 @@ public class LoggerListener implements Listener {
 	}
 
 	//BASE PLAYER EVENTS
-	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
+	/*@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onPlayerJoin(PlayerJoinEvent event) {
 		queueAction(new PlayerAction(event.getPlayer(), "join"));
 	}
@@ -111,7 +111,7 @@ public class LoggerListener implements Listener {
 	@EventHandler(priority = EventPriority.MONITOR) //DO NOT ignoreCancelled = true!!!
 	public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
 		queueAction(new PlayerChatAction(event.getPlayer(), event.getMessage()));
-	}
+	}*/
 
 	//INVENTORY PLAYER EVENTS
 	private final Map<HumanEntity, ItemStack[]> containers = new HashMap<>();
