@@ -50,6 +50,10 @@ public abstract class BaseAction {
 		return builder;
 	}
 
+    public Date getDate() {
+        return date;
+    }
+
     static Map<String, Object> builderBasicTypeMapping(String type, String index, String format) throws IOException {
         Map<String, Object> builder = new HashMap<>();
 

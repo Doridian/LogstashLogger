@@ -61,4 +61,8 @@ public abstract class PlayerAndLocationAction extends PlayerAction {
 
 		return builder;
 	}
+
+    public Location getLocation() {
+        return location;
+    }
 }

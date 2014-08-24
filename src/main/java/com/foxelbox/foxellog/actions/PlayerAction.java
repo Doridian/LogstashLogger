@@ -54,4 +54,8 @@ public abstract class PlayerAction extends BaseAction {
 
 		return builder;
 	}
+
+    public HumanEntity getUser() {
+        return user;
+    }
 }

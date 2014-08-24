@@ -60,4 +60,8 @@ public abstract class LocationAction extends BaseAction {
 
 		return builder;
 	}
+
+    public Location getLocation() {
+        return location;
+    }
 }

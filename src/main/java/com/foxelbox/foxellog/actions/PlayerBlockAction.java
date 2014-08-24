@@ -25,27 +25,27 @@ import java.io.IOException;
 import java.util.Map;
 
 public class PlayerBlockAction extends PlayerAndLocationAction {
-	private final Material block_from;
-	private final Material block_to;
+	private final Material blockFrom;
+	private final Material blockTo;
 
-	public PlayerBlockAction(HumanEntity user, Location location, Material block_from, Material block_to) {
+	public PlayerBlockAction(HumanEntity user, Location location, Material blockFrom, Material blockTo) {
 		super(user, location);
-		this.block_from = block_from;
-		this.block_to = block_to;
+		this.blockFrom = blockFrom;
+		this.blockTo = blockTo;
 	}
 
     protected PlayerBlockAction(Map<String, Object> fields) {
         super(fields);
-        this.block_from = Material.getMaterial((String)fields.get("block_from"));
-        this.block_to = Material.getMaterial((String)fields.get("block_to"));
+        this.blockFrom = Material.getMaterial((String)fields.get("blockFrom"));
+        this.blockTo = Material.getMaterial((String)fields.get("blockTo"));
     }
 
     @Override
     protected Map<String, Map<String, Object>> getCustomMappings() throws IOException {
         Map<String, Map<String, Object>> retMap = super.getCustomMappings();
 
-        retMap.put("block_from", builderBasicTypeMapping("string", "not_analyzed", null));
-        retMap.put("block_to", builderBasicTypeMapping("string", "not_analyzed", null));
+        retMap.put("blockFrom", builderBasicTypeMapping("string", "not_analyzed", null));
+        retMap.put("blockTo", builderBasicTypeMapping("string", "not_analyzed", null));
 
         return retMap;
     }
@@ -58,9 +58,17 @@ public class PlayerBlockAction extends PlayerAndLocationAction {
     public XContentBuilder toJSONObject(XContentBuilder builder) throws IOException {
         builder = super.toJSONObject(builder);
 
-		builder.field("block_from", block_from.name());
-		builder.field("block_to", block_to.name());
+		builder.field("blockFrom", blockFrom.name());
+		builder.field("blockTo", blockTo.name());
 
 		return builder;
 	}
+
+    public Material getBlockFrom() {
+        return blockFrom;
+    }
+
+    public Material getBlockTo() {
+        return blockTo;
+    }
 }
