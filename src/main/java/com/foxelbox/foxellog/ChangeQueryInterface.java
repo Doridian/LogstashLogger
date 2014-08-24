@@ -9,9 +9,9 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 
 public class ChangeQueryInterface {
     private final FoxelLog plugin;
@@ -20,11 +20,16 @@ public class ChangeQueryInterface {
         this.plugin = plugin;
     }
 
-    public Collection<BaseAction> queryActions(final QueryBuilder query) {
-        return queryActions(query, true);
+    public List<BaseAction> queryActions(final QueryBuilder query) {
+        return queryActions(query, new Comparator<BaseAction>() {
+            @Override
+            public int compare(BaseAction o1, BaseAction o2) {
+                return o1.getDate().compareTo(o2.getDate());
+            }
+        });
     }
 
-    public Collection<BaseAction> queryActions(final QueryBuilder query, final boolean sortByDateDesc) {
+    public List<BaseAction> queryActions(final QueryBuilder query, final Comparator<BaseAction> sortBy) {
         final TimeValue SCROLL_TIME = new TimeValue(60000);
 
         SearchResponse result = plugin.elasticsearchClient.prepareSearch(plugin.getIndexName())
@@ -35,7 +40,7 @@ public class ChangeQueryInterface {
                 .execute()
                 .actionGet();
 
-        final ArrayList<BaseAction> ret = new ArrayList<>();
+        final List<BaseAction> ret = new ArrayList<>();
 
         while (true) {
             result = plugin.elasticsearchClient.prepareSearchScroll(result.getScrollId())
@@ -49,14 +54,8 @@ public class ChangeQueryInterface {
                 break;
         }
 
-        if(sortByDateDesc) {
-            Collections.sort(ret, new Comparator<BaseAction>() {
-                @Override
-                public int compare(BaseAction o1, BaseAction o2) {
-                    return o1.getDate().compareTo(o2.getDate());
-                }
-            });
-        }
+        if(sortBy != null)
+            Collections.sort(ret, sortBy);
 
         return ret;
     }

@@ -8,7 +8,7 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 import org.elasticsearch.index.query.QueryBuilders;
 
-import java.util.Collection;
+import java.util.List;
 
 public class FLCommand implements CommandExecutor {
     private final FoxelLog plugin;
@@ -19,9 +19,12 @@ public class FLCommand implements CommandExecutor {
 
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String s, String[] strings) {
-        Collection<BaseAction> actions = plugin.getChangeQueryInterface().queryActions(
-                QueryBuilders.termQuery("user_uuid", ((Player)commandSender).getUniqueId().toString())
+        List<BaseAction> actions = plugin.getChangeQueryInterface().queryActions(
+                QueryBuilders.termQuery("user_uuid", ((Player) commandSender).getUniqueId().toString())
         );
+
+        for(BaseAction action : actions)
+            commandSender.sendMessage(action.getDate().toGMTString());
 
         System.out.println(actions);
 
