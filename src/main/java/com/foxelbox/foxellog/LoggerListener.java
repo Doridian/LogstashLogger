@@ -1,27 +1,27 @@
 /**
- * This file is part of LogstashLogger.
+ * This file is part of FoxelLog.
  *
- * LogstashLogger is free software: you can redistribute it and/or modify
+ * FoxelLog is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Lesser General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
  *
- * LogstashLogger is distributed in the hope that it will be useful,
+ * FoxelLog is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public License
- * along with LogstashLogger.  If not, see <http://www.gnu.org/licenses/>.
+ * along with FoxelLog.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.foxelbox.logstashlogger;
+package com.foxelbox.foxellog;
 
-import com.foxelbox.logstashlogger.actions.PlayerAction;
-import com.foxelbox.logstashlogger.actions.PlayerBlockAction;
-import com.foxelbox.logstashlogger.actions.PlayerChatAction;
-import com.foxelbox.logstashlogger.actions.PlayerInventoryAction;
-import com.foxelbox.logstashlogger.redis.RedisQueueThread;
-import com.foxelbox.logstashlogger.util.BukkitUtils;
+import com.foxelbox.foxellog.actions.PlayerAction;
+import com.foxelbox.foxellog.actions.PlayerBlockAction;
+import com.foxelbox.foxellog.actions.PlayerChatAction;
+import com.foxelbox.foxellog.actions.PlayerInventoryAction;
+import com.foxelbox.foxellog.redis.RedisQueueThread;
+import com.foxelbox.foxellog.util.BukkitUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
