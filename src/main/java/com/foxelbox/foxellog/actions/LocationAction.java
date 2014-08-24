@@ -22,6 +22,7 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.elasticsearch.search.SearchHitField;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.Map;
 
 public abstract class LocationAction extends BaseAction {
@@ -31,12 +32,25 @@ public abstract class LocationAction extends BaseAction {
 		this.location = location;
 	}
 
-    protected LocationAction(Map<String, SearchHitField> fields) {
+    protected LocationAction(Map<String, Object> fields) {
         super(fields);
-        location = new Location(FoxelLog.instance.getServer().getWorld((String)fields.get("y").value()), (double)fields.get("x").value(), (double)fields.get("y").value(), (double)fields.get("z").value());
+        location = new Location(FoxelLog.instance.getServer().getWorld((String)fields.get("world")), (double)fields.get("x"), (double)fields.get("y"), (double)fields.get("z"));
     }
 
-	@Override
+    @Override
+    protected Map<String, Map<String, Object>> getCustomMappings() throws IOException {
+        Map<String, Map<String, Object>> retMap = super.getCustomMappings();
+
+        retMap.put("x", builderBasicTypeMapping("double", null, null));
+        retMap.put("y", builderBasicTypeMapping("double", null, null));
+        retMap.put("z", builderBasicTypeMapping("double", null, null));
+
+        retMap.put("world", builderBasicTypeMapping("string", "not_analyzed", null));
+
+        return retMap;
+    }
+
+    @Override
 	public XContentBuilder toJSONObject(XContentBuilder builder) throws IOException {
         builder = super.toJSONObject(builder);
         

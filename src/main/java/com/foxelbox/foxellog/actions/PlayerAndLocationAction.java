@@ -33,9 +33,21 @@ public abstract class PlayerAndLocationAction extends PlayerAction {
 		this.location = location;
 	}
 
-    protected PlayerAndLocationAction(Map<String, SearchHitField> fields) {
+    protected PlayerAndLocationAction(Map<String, Object> fields) {
         super(fields);
-        location = new Location(FoxelLog.instance.getServer().getWorld((String)fields.get("y").value()), (double)fields.get("x").value(), (double)fields.get("y").value(), (double)fields.get("z").value());
+        location = new Location(FoxelLog.instance.getServer().getWorld((String)fields.get("world")), (double)fields.get("x"), (double)fields.get("y"), (double)fields.get("z"));
+    }
+
+    @Override
+    protected Map<String, Map<String, Object>> getCustomMappings() throws IOException {
+        Map<String, Map<String, Object>> retMap = super.getCustomMappings();
+
+        retMap.put("x", builderBasicTypeMapping("double", null, null));
+        retMap.put("y", builderBasicTypeMapping("double", null, null));
+        retMap.put("z", builderBasicTypeMapping("double", null, null));
+
+        retMap.put("world", builderBasicTypeMapping("string", "not_analyzed", null));
+        return retMap;
     }
 
 	@Override

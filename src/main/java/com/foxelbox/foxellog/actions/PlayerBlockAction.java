@@ -36,10 +36,20 @@ public class PlayerBlockAction extends PlayerAndLocationAction {
 		this.materialAfter = materialAfter;
 	}
 
-    protected PlayerBlockAction(Map<String, SearchHitField> fields) {
+    protected PlayerBlockAction(Map<String, Object> fields) {
         super(fields);
-        this.materialBefore = Material.getMaterial((String)fields.get("block_from").value());
-        this.materialAfter = Material.getMaterial((String)fields.get("block_to").value());
+        this.materialBefore = Material.getMaterial((String)fields.get("block_from"));
+        this.materialAfter = Material.getMaterial((String)fields.get("block_to"));
+    }
+
+    @Override
+    protected Map<String, Map<String, Object>> getCustomMappings() throws IOException {
+        Map<String, Map<String, Object>> retMap = super.getCustomMappings();
+
+        retMap.put("block_from", builderBasicTypeMapping("string", "not_analyzed", null));
+        retMap.put("block_to", builderBasicTypeMapping("string", "not_analyzed", null));
+
+        return retMap;
     }
 
     @Override

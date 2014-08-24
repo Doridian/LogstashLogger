@@ -16,8 +16,13 @@
  */
 package com.foxelbox.foxellog.actions;
 
+import com.foxelbox.foxellog.FoxelLog;
 import com.foxelbox.foxellog.util.ClassUtils;
+import org.elasticsearch.common.joda.time.format.DateTimeFormatter;
+import org.elasticsearch.common.joda.time.format.ISODateTimeFormat;
+import org.elasticsearch.common.xcontent.XContent;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.common.xcontent.XContentFactory;
 import org.elasticsearch.search.SearchHitField;
 import org.objenesis.ObjenesisStd;
 
@@ -28,9 +33,11 @@ import java.lang.reflect.Modifier;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 
 public abstract class BaseAction {
 	private final Date timestamp;
+    private static final DateTimeFormatter DATE_TIME_FORMATTER = ISODateTimeFormat.dateTime();
 
     public abstract String getType();
 
@@ -38,8 +45,8 @@ public abstract class BaseAction {
         timestamp = new Date();
     }
 
-    protected BaseAction(Map<String, SearchHitField> fields) {
-        timestamp = fields.get("date").value();
+    protected BaseAction(Map<String, Object> fields) {
+        timestamp = DATE_TIME_FORMATTER.parseDateTime((String)fields.get("date")).toDate();
     }
 
     public XContentBuilder toJSONObject(XContentBuilder builder) throws IOException {
@@ -47,14 +54,38 @@ public abstract class BaseAction {
 		return builder;
 	}
 
+    static Map<String, Object> builderBasicTypeMapping(String type, String index, String format) throws IOException {
+        Map<String, Object> builder = new HashMap<>();
+
+        if(type != null)
+            builder.put("type", type);
+        if(index != null)
+            builder.put("index", index);
+        if(format != null)
+            builder.put("format", format);
+
+        return builder;
+    }
+
+    protected Map<String, Map<String, Object>> getCustomMappings() throws IOException {
+        Map<String, Map<String, Object>> retMap = new HashMap<>();
+
+        retMap.put("date", builderBasicTypeMapping("date", null, "dateTime"));
+
+        return retMap;
+    }
+
     private final static ObjenesisStd objenesisStd;
-    private final static Map<String, Constructor<? extends BaseAction>> typeToClassMap = new HashMap<>();
+    private final static Map<String, Class<? extends BaseAction>> typeToClassMap = new HashMap<>();
+    private final static Map<String, Constructor<? extends BaseAction>> typeToCtorMap = new HashMap<>();
     static {
         objenesisStd = new ObjenesisStd();
         for(Class<? extends BaseAction> clazz : ClassUtils.getSubClasses(BaseAction.class, BaseAction.class.getPackage().getName())) {
             if (!Modifier.isAbstract(clazz.getModifiers())) {
                 try {
-                    typeToClassMap.put(objenesisStd.newInstance(clazz).getType(), clazz.getDeclaredConstructor(Map.class));
+                    final String classType = objenesisStd.newInstance(clazz).getType();
+                    typeToClassMap.put(classType, clazz);
+                    typeToCtorMap.put(classType, clazz.getDeclaredConstructor(Map.class));
                 } catch (NoSuchMethodException e) {
                     e.printStackTrace();
                 }
@@ -62,9 +93,17 @@ public abstract class BaseAction {
         }
     }
 
-    public static BaseAction craftActionByTypeAndValues(String type, Map<String, SearchHitField> fields) {
+    public static Map<String, Map<String, Object>> getCustomMappingsByType(String type) throws IOException {
+        return objenesisStd.newInstance(typeToClassMap.get(type)).getCustomMappings();
+    }
+
+    public static Set<String> getTypes() {
+        return typeToClassMap.keySet();
+    }
+
+    public static BaseAction craftActionByTypeAndValues(String type, Map<String, Object> fields) {
         try {
-            return typeToClassMap.get(type).newInstance(fields);
+            return typeToCtorMap.get(type).newInstance(fields);
         } catch (IllegalAccessException|InvocationTargetException|InstantiationException e) {
             throw new RuntimeException(e);
         }

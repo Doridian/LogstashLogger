@@ -31,9 +31,18 @@ public class PlayerChatAction extends PlayerAction {
 		this.message = message;
 	}
 
-    protected PlayerChatAction(Map<String, SearchHitField> fields) {
+    protected PlayerChatAction(Map<String, Object> fields) {
         super(fields);
-        this.message = fields.get("message").value();
+        this.message = (String)fields.get("message");
+    }
+
+    @Override
+    protected Map<String, Map<String, Object>> getCustomMappings() throws IOException {
+        Map<String, Map<String, Object>> retMap = super.getCustomMappings();
+
+        retMap.put("message", builderBasicTypeMapping("string", null, null));
+
+        return retMap;
     }
 
     @Override

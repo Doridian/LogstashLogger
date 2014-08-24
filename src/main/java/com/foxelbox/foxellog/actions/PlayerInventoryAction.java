@@ -37,11 +37,22 @@ public class PlayerInventoryAction extends PlayerAndLocationAction {
 		this.amount = amount;
 	}
 
-    protected PlayerInventoryAction(Map<String, SearchHitField> fields) {
+    protected PlayerInventoryAction(Map<String, Object> fields) {
         super(fields);
-        this.amount = fields.get("amount").value();
-        this.material = Material.getMaterial((String)fields.get("block").value());
-        this.container = Material.getMaterial((String)fields.get("container").value());
+        this.amount = (Integer)fields.get("amount");
+        this.material = Material.getMaterial((String)fields.get("block"));
+        this.container = Material.getMaterial((String)fields.get("container"));
+    }
+
+    @Override
+    protected Map<String, Map<String, Object>> getCustomMappings() throws IOException {
+        Map<String, Map<String, Object>> retMap = super.getCustomMappings();
+
+        retMap.put("block", builderBasicTypeMapping("string", "not_analyzed", null));
+        retMap.put("container", builderBasicTypeMapping("string", "not_analyzed", null));
+        retMap.put("amount", builderBasicTypeMapping("integer", null, null));
+
+        return retMap;
     }
 
     @Override

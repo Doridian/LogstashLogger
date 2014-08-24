@@ -33,9 +33,18 @@ public abstract class PlayerAction extends BaseAction {
 		this.user = user;
 	}
 
-    protected PlayerAction(Map<String, SearchHitField> fields) {
+    protected PlayerAction(Map<String, Object> fields) {
         super(fields);
-        user = FoxelLog.instance.getServer().getPlayer(UUID.fromString((String)fields.get("user_uuid").value()));
+        user = FoxelLog.instance.getServer().getPlayer(UUID.fromString((String)fields.get("user_uuid")));
+    }
+
+    @Override
+    protected Map<String, Map<String, Object>> getCustomMappings() throws IOException {
+        Map<String, Map<String, Object>> retMap = super.getCustomMappings();
+
+        retMap.put("user_uuid", builderBasicTypeMapping("string", "not_analyzed", null));
+
+        return retMap;
     }
 
 	@Override

@@ -1,3 +1,12 @@
 name: FoxelLog
 main: com.foxelbox.foxellog.FoxelLog
 version: 1.0.0
+commands:
+    fl:
+        description: FoxelLog main command
+        permission: foxellog.commands.fl
+        usage: /<command> <args>
+    lb:
+        description: FoxelLog LB compat command
+        permission: foxellog.commands.lb
+        usage: /<command> <args>
