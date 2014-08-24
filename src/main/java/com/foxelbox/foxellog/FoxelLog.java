@@ -50,7 +50,7 @@ public class FoxelLog extends JavaPlugin {
 		super.onEnable();
         configuration = new Configuration(getDataFolder());
 
-        INDEX_NAME = "foxellog_" + FoxelLog.instance.configuration.getValue("server-name", "N/A").toLowerCase();
+        INDEX_NAME = "foxellog_" + configuration.getValue("server-name", "N/A").toLowerCase();
 
         ImmutableSettings.Builder settings;
         try {
