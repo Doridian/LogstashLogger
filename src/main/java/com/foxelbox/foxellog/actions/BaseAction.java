@@ -71,11 +71,10 @@ public abstract class BaseAction {
         return retMap;
     }
 
-    private final static ObjenesisStd objenesisStd;
     private final static Map<String, Class<? extends BaseAction>> typeToClassMap = new HashMap<>();
     private final static Map<String, Constructor<? extends BaseAction>> typeToCtorMap = new HashMap<>();
     static {
-        objenesisStd = new ObjenesisStd();
+        final ObjenesisStd objenesisStd = new ObjenesisStd();
         for(Class<? extends BaseAction> clazz : ClassUtils.getSubClasses(BaseAction.class, BaseAction.class.getPackage().getName())) {
             if (!Modifier.isAbstract(clazz.getModifiers())) {
                 try {
@@ -90,7 +89,7 @@ public abstract class BaseAction {
     }
 
     public static Map<String, Map<String, Object>> getCustomMappingsByType(String type) throws IOException {
-        return objenesisStd.newInstance(typeToClassMap.get(type)).getCustomMappings();
+        return new ObjenesisStd().newInstance(typeToClassMap.get(type)).getCustomMappings();
     }
 
     public static Set<String> getTypes() {
