@@ -26,11 +26,6 @@ public abstract class BaseAction {
 	private final Date timestamp = new Date();
 	private final String action;
 
-    private static final String INDEX_NAME = "foxellog_" + FoxelLog.instance.configuration.getValue("server-name", "N/A").toLowerCase();
-    public static String getIndexName() {
-        return INDEX_NAME;
-    }
-
 	public BaseAction(String action) {
 		this.action = action;
 	}

@@ -36,11 +36,21 @@ public class FoxelLog extends JavaPlugin {
     public Client elasticsearchClient;
     private Node elasticsearchNode;
 
+    private String INDEX_NAME;
+    public String getIndexName() {
+        return INDEX_NAME;
+    }
+    public String getTypeName() {
+        return "change";
+    }
+
 	@Override
 	public void onEnable() {
 		instance = this;
 		super.onEnable();
         configuration = new Configuration(getDataFolder());
+
+        INDEX_NAME = "foxellog_" + FoxelLog.instance.configuration.getValue("server-name", "N/A").toLowerCase();
 
         ImmutableSettings.Builder settings;
         try {
@@ -54,7 +64,7 @@ public class FoxelLog extends JavaPlugin {
         elasticsearchNode = NodeBuilder.nodeBuilder().settings(settings).client(true).node();
         elasticsearchClient = elasticsearchNode.client();
 
-        listener = new LoggerListener();
+        listener = new LoggerListener(this);
 		getServer().getPluginManager().registerEvents(listener, this);
 	}
 

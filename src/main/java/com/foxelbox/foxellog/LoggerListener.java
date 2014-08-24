@@ -39,10 +39,15 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class LoggerListener implements Listener {
+    private final FoxelLog plugin;
+    public LoggerListener(FoxelLog plugin) {
+        this.plugin = plugin;
+    }
+
     private void queueAction(BaseAction action) {
         try {
-            FoxelLog.instance.elasticsearchClient
-                    .prepareIndex(BaseAction.getIndexName(), "change")
+            plugin.elasticsearchClient
+                    .prepareIndex(plugin.getIndexName(), plugin.getTypeName())
                     .setSource(
                             action.toJSONObject(
                                     XContentFactory.jsonBuilder().startObject()
