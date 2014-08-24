@@ -25,19 +25,19 @@ import java.io.IOException;
 import java.util.Map;
 
 public class PlayerBlockAction extends PlayerAndLocationAction {
-	private final Material materialBefore;
-	private final Material materialAfter;
+	private final Material block_from;
+	private final Material block_to;
 
-	public PlayerBlockAction(HumanEntity user, Location location, Material materialBefore, Material materialAfter) {
+	public PlayerBlockAction(HumanEntity user, Location location, Material block_from, Material block_to) {
 		super(user, location);
-		this.materialBefore = materialBefore;
-		this.materialAfter = materialAfter;
+		this.block_from = block_from;
+		this.block_to = block_to;
 	}
 
     protected PlayerBlockAction(Map<String, Object> fields) {
         super(fields);
-        this.materialBefore = Material.getMaterial((String)fields.get("block_from"));
-        this.materialAfter = Material.getMaterial((String)fields.get("block_to"));
+        this.block_from = Material.getMaterial((String)fields.get("block_from"));
+        this.block_to = Material.getMaterial((String)fields.get("block_to"));
     }
 
     @Override
@@ -58,8 +58,8 @@ public class PlayerBlockAction extends PlayerAndLocationAction {
     public XContentBuilder toJSONObject(XContentBuilder builder) throws IOException {
         builder = super.toJSONObject(builder);
 
-		builder.field("block_from", materialBefore.name());
-		builder.field("block_to", materialAfter.name());
+		builder.field("block_from", block_from.name());
+		builder.field("block_to", block_to.name());
 
 		return builder;
 	}

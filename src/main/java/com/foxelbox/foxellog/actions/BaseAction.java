@@ -32,21 +32,21 @@ import java.util.Map;
 import java.util.Set;
 
 public abstract class BaseAction {
-	private final Date timestamp;
+	private final Date date;
     private static final DateTimeFormatter DATE_TIME_FORMATTER = ISODateTimeFormat.dateTime();
 
     public abstract String getType();
 
     protected BaseAction() {
-        timestamp = new Date();
+        date = new Date();
     }
 
     protected BaseAction(Map<String, Object> fields) {
-        timestamp = DATE_TIME_FORMATTER.parseDateTime((String)fields.get("date")).toDate();
+        date = DATE_TIME_FORMATTER.parseDateTime((String)fields.get("date")).toDate();
     }
 
     public XContentBuilder toJSONObject(XContentBuilder builder) throws IOException {
-        builder.field("date", timestamp);
+        builder.field("date", date);
 		return builder;
 	}
 

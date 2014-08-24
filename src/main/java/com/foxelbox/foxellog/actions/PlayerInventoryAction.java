@@ -25,13 +25,13 @@ import java.io.IOException;
 import java.util.Map;
 
 public class PlayerInventoryAction extends PlayerAndLocationAction {
-	private final Material material;
+	private final Material block;
 	private final Material container;
 	private final int amount;
 
-	public PlayerInventoryAction(HumanEntity user, Location location, Material container, Material material, int amount) {
+	public PlayerInventoryAction(HumanEntity user, Location location, Material container, Material block, int amount) {
 		super(user, location);
-		this.material = material;
+		this.block = block;
 		this.container = container;
 		this.amount = amount;
 	}
@@ -39,7 +39,7 @@ public class PlayerInventoryAction extends PlayerAndLocationAction {
     protected PlayerInventoryAction(Map<String, Object> fields) {
         super(fields);
         this.amount = (Integer)fields.get("amount");
-        this.material = Material.getMaterial((String)fields.get("block"));
+        this.block = Material.getMaterial((String)fields.get("block"));
         this.container = Material.getMaterial((String)fields.get("container"));
     }
 
@@ -63,7 +63,7 @@ public class PlayerInventoryAction extends PlayerAndLocationAction {
     public XContentBuilder toJSONObject(XContentBuilder builder) throws IOException {
         builder = super.toJSONObject(builder);
 
-		builder.field("block", material.name());
+		builder.field("block", block.name());
 		builder.field("container", container.name());
 		builder.field("amount", amount);
 
