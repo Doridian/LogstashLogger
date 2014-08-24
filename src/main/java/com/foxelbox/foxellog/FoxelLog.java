@@ -82,6 +82,8 @@ public class FoxelLog extends JavaPlugin {
             e.printStackTrace();
             throw new RuntimeException(e);
         }
+
+        listener.enable();
 	}
 
     private void registerIndices() throws IOException {
@@ -116,6 +118,7 @@ public class FoxelLog extends JavaPlugin {
 
     @Override
     public void onDisable() {
+        listener.disable();
         elasticsearchNode.close();
         elasticsearchClient.close();
     }
