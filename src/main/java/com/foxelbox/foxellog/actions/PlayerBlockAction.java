@@ -16,15 +16,15 @@
  */
 package com.foxelbox.foxellog.actions;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 
-import java.io.IOException;
 import java.util.Map;
 
-public class PlayerBlockAction extends PlayerAndLocationAction {
+public class PlayerBlockAction extends BaseAction {
 	private final Material blockFrom;
 	private final Material blockTo;
 
@@ -34,32 +34,22 @@ public class PlayerBlockAction extends PlayerAndLocationAction {
 		this.blockTo = blockTo;
 	}
 
-    protected PlayerBlockAction(Map<String, Object> fields) {
+    protected PlayerBlockAction(DBObject fields) {
         super(fields);
         this.blockFrom = Material.getMaterial((String)fields.get("blockFrom"));
         this.blockTo = Material.getMaterial((String)fields.get("blockTo"));
     }
 
     @Override
-    protected Map<String, Map<String, Object>> getCustomMappings() throws IOException {
-        Map<String, Map<String, Object>> retMap = super.getCustomMappings();
-
-        retMap.put("blockFrom", builderBasicTypeMapping("string", "not_analyzed", null));
-        retMap.put("blockTo", builderBasicTypeMapping("string", "not_analyzed", null));
-
-        return retMap;
-    }
-
-    @Override
-    public String getType() {
+    public String getActionType() {
         return "player_block_change";
     }
 
-    public XContentBuilder toJSONObject(XContentBuilder builder) throws IOException {
-        builder = super.toJSONObject(builder);
+    protected BasicDBObject toBasicDBObject(BasicDBObject builder) {
+        builder = super.toBasicDBObject(builder);
 
-		builder.field("blockFrom", blockFrom.name());
-		builder.field("blockTo", blockTo.name());
+		builder.append("blockFrom", blockFrom.name());
+		builder.append("blockTo", blockTo.name());
 
 		return builder;
 	}

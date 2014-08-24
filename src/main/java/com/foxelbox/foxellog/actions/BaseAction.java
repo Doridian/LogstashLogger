@@ -16,37 +16,68 @@
  */
 package com.foxelbox.foxellog.actions;
 
+import com.foxelbox.foxellog.FoxelLog;
 import com.foxelbox.foxellog.util.ClassUtils;
-import org.elasticsearch.common.joda.time.format.DateTimeFormatter;
-import org.elasticsearch.common.joda.time.format.ISODateTimeFormat;
-import org.elasticsearch.common.xcontent.XContentBuilder;
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
+import org.bukkit.Location;
+import org.bukkit.entity.HumanEntity;
+import org.joda.time.DateTime;
+import org.joda.time.format.DateTimeFormatter;
+import org.joda.time.format.ISODateTimeFormat;
 import org.objenesis.ObjenesisStd;
 
-import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Modifier;
-import java.util.Date;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public abstract class BaseAction {
 	private final Date date;
+    private final HumanEntity user;
+    private final Location location;
+
     private static final DateTimeFormatter DATE_TIME_FORMATTER = ISODateTimeFormat.dateTime();
 
-    public abstract String getType();
+    public abstract String getActionType();
 
-    protected BaseAction() {
-        date = new Date();
+    public static String getCollection() {
+        return "actions";
     }
 
-    protected BaseAction(Map<String, Object> fields) {
-        date = DATE_TIME_FORMATTER.parseDateTime((String)fields.get("date")).toDate();
+    protected BaseAction(HumanEntity user, Location location) {
+        this.date = new Date();
+        this.user = user;
+        this.location = location;
     }
 
-    public XContentBuilder toJSONObject(XContentBuilder builder) throws IOException {
-        builder.field("date", date);
+    protected BaseAction(DBObject fields) {
+        date = (Date)fields.get("date");
+        user = FoxelLog.instance.getServer().getPlayer((UUID)fields.get("user_uuid"));
+
+        final DBObject locationFields = (DBObject)fields.get("location");
+        location = new Location(FoxelLog.instance.getServer().getWorld((String)locationFields.get("world")), (double)locationFields.get("x"), (double)locationFields.get("y"), (double)locationFields.get("z"));
+    }
+
+    public final DBObject toDBObject() {
+        return toBasicDBObject(new BasicDBObject());
+    }
+
+    protected BasicDBObject toBasicDBObject(BasicDBObject builder) {
+        builder.append("date", date);
+
+        builder.append("type", getActionType());
+
+        builder.append("location", new BasicDBObject()
+                .append("x", location.getX())
+                .append("y", location.getY())
+                .append("z", location.getZ())
+                .append("world", location.getWorld().getName())
+        );
+
+        //builder.field("user_name", user.getName());
+        builder.append("user_uuid", user.getUniqueId());
+
 		return builder;
 	}
 
@@ -54,25 +85,12 @@ public abstract class BaseAction {
         return date;
     }
 
-    static Map<String, Object> builderBasicTypeMapping(String type, String index, String format) throws IOException {
-        Map<String, Object> builder = new HashMap<>();
-
-        if(type != null)
-            builder.put("type", type);
-        if(index != null)
-            builder.put("index", index);
-        if(format != null)
-            builder.put("format", format);
-
-        return builder;
+    public HumanEntity getUser() {
+        return user;
     }
 
-    protected Map<String, Map<String, Object>> getCustomMappings() throws IOException {
-        Map<String, Map<String, Object>> retMap = new HashMap<>();
-
-        retMap.put("date", builderBasicTypeMapping("date", null, "dateTime"));
-
-        return retMap;
+    public Location getLocation() {
+        return location;
     }
 
     private final static Map<String, Class<? extends BaseAction>> typeToClassMap = new HashMap<>();
@@ -82,9 +100,9 @@ public abstract class BaseAction {
         for(Class<? extends BaseAction> clazz : ClassUtils.getSubClasses(BaseAction.class, BaseAction.class.getPackage().getName())) {
             if (!Modifier.isAbstract(clazz.getModifiers())) {
                 try {
-                    final String classType = objenesisStd.newInstance(clazz).getType();
+                    final String classType = objenesisStd.newInstance(clazz).getActionType();
                     typeToClassMap.put(classType, clazz);
-                    typeToCtorMap.put(classType, clazz.getDeclaredConstructor(Map.class));
+                    typeToCtorMap.put(classType, clazz.getDeclaredConstructor(DBObject.class));
                 } catch (NoSuchMethodException e) {
                     e.printStackTrace();
                 }
@@ -92,15 +110,11 @@ public abstract class BaseAction {
         }
     }
 
-    public static Map<String, Map<String, Object>> getCustomMappingsByType(String type) throws IOException {
-        return new ObjenesisStd().newInstance(typeToClassMap.get(type)).getCustomMappings();
-    }
-
     public static Set<String> getTypes() {
         return typeToClassMap.keySet();
     }
 
-    public static BaseAction craftActionByTypeAndValues(String type, Map<String, Object> fields) {
+    public static BaseAction craftActionByTypeAndDBObject(String type, DBObject fields) {
         try {
             return typeToCtorMap.get(type).newInstance(fields);
         } catch (IllegalAccessException|InvocationTargetException|InstantiationException e) {

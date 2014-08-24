@@ -20,7 +20,8 @@ import com.foxelbox.foxellog.actions.BaseAction;
 import com.foxelbox.foxellog.actions.PlayerBlockAction;
 import com.foxelbox.foxellog.actions.PlayerInventoryAction;
 import com.foxelbox.foxellog.util.BukkitUtils;
-import com.sun.jmx.remote.internal.ArrayQueue;
+import com.mongodb.DB;
+import com.mongodb.DBCollection;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
@@ -36,10 +37,6 @@ import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.PlayerBucketFillEvent;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
-import org.elasticsearch.action.bulk.BulkItemResponse;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
-import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.common.xcontent.XContentFactory;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -65,31 +62,19 @@ public class LoggerListener implements Listener {
                         Thread.sleep(100);
                     } catch (InterruptedException e) { }
 
-                    while (!queuedActions.isEmpty()) {
-                        final BulkRequestBuilder bulkRequestBuilder = plugin.elasticsearchClient.prepareBulk();
-
-                        BaseAction action;
-                        int requestCount = 0;
-                        while ((++requestCount < 100) && ((action = queuedActions.poll()) != null)) {
+                    BaseAction action;
+                    final DB db = plugin.getMongoDB();
+                    final DBCollection collection = db.getCollection(BaseAction.getCollection());
+                    while ((action = queuedActions.poll()) != null) {
+                        try {
+                            collection.insert(action.toDBObject());
+                        } catch (Exception e) {
+                            queuedActions.add(action);
+                            e.printStackTrace();
                             try {
-                                bulkRequestBuilder.add(plugin.elasticsearchClient
-                                        .prepareIndex(plugin.getIndexName(), action.getType())
-                                        .setSource(
-                                                action.toJSONObject(
-                                                        XContentFactory.jsonBuilder().startObject()
-                                                ).endObject()
-                                        ));
-                            } catch (Exception e) {
-                                e.printStackTrace();
-                            }
-                        }
-
-                        BulkResponse bulkResponse = bulkRequestBuilder.execute().actionGet();
-                        if (bulkResponse.hasFailures()) {
-                            for (BulkItemResponse response : bulkResponse.getItems()) {
-                                if (response.isFailed())
-                                    System.err.println("[FoxelLog] ERROR Logging: " + response.getFailureMessage());
-                            }
+                                Thread.sleep(1000);
+                            } catch (InterruptedException ex) { }
+                            break;
                         }
                     }
                 }

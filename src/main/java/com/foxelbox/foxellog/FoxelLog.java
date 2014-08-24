@@ -19,13 +19,9 @@ package com.foxelbox.foxellog;
 import com.foxelbox.dependencies.config.Configuration;
 import com.foxelbox.foxellog.actions.BaseAction;
 import com.foxelbox.foxellog.commands.FLCommand;
+import com.mongodb.DB;
+import com.mongodb.MongoClient;
 import org.bukkit.plugin.java.JavaPlugin;
-import org.elasticsearch.client.Client;
-import org.elasticsearch.common.settings.ImmutableSettings;
-import org.elasticsearch.common.xcontent.XContentFactory;
-import org.elasticsearch.indices.IndexAlreadyExistsException;
-import org.elasticsearch.node.Node;
-import org.elasticsearch.node.NodeBuilder;
 
 import java.io.File;
 import java.io.IOException;
@@ -39,14 +35,13 @@ public class FoxelLog extends JavaPlugin {
 
     public Configuration configuration;
 
-    Client elasticsearchClient;
-    private Node elasticsearchNode;
+    private MongoClient mongoClient;
+    private DB mongoDB;
 
     private ChangeQueryInterface changeQueryInterface;
 
-    private String INDEX_NAME;
-    public String getIndexName() {
-        return INDEX_NAME;
+    public DB getMongoDB() {
+        return mongoDB;
     }
 
 	@Override
@@ -55,19 +50,17 @@ public class FoxelLog extends JavaPlugin {
 		super.onEnable();
         configuration = new Configuration(getDataFolder());
 
-        INDEX_NAME = "foxellog_" + configuration.getValue("server-name", "N/A").toLowerCase();
-
-        ImmutableSettings.Builder settings;
         try {
-            settings = ImmutableSettings.settingsBuilder()
-                    .classLoader(this.getClassLoader())
-                    .loadFromUrl(new File(getDataFolder(), "elasticsearch.yml").toURI().toURL());
-        } catch (Exception e) {
+            mongoClient = new MongoClient(configuration.getValue("mongodb-host", "localhost"), Integer.parseInt(configuration.getValue("mongodb-port", "27017")));
+            mongoDB = mongoClient.getDB(configuration.getValue("mongodb-db", "foxellog_unnamed"));
+            String authUser = configuration.getValue("mongodb-auth-user", "");
+            String authPassword = configuration.getValue("mongodb-auth-password", "");
+            if(authUser != null && !authUser.isEmpty() && authPassword != null && !authPassword.isEmpty())
+                mongoDB.authenticate(authUser, authPassword.toCharArray());
+        } catch (IOException e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
-
-        elasticsearchNode = NodeBuilder.nodeBuilder().settings(settings).client(true).node();
-        elasticsearchClient = elasticsearchNode.client();
 
         listener = new LoggerListener(this);
 		getServer().getPluginManager().registerEvents(listener, this);
@@ -76,41 +69,8 @@ public class FoxelLog extends JavaPlugin {
 
         changeQueryInterface = new ChangeQueryInterface(this);
 
-        try {
-            registerIndices();
-        } catch (IOException e) {
-            e.printStackTrace();
-            throw new RuntimeException(e);
-        }
-
         listener.enable();
 	}
-
-    private void registerIndices() throws IOException {
-        try {
-            elasticsearchClient.admin().indices().prepareCreate(getIndexName()).execute().actionGet();
-        } catch (IndexAlreadyExistsException e) {
-            return;
-        }
-
-        for(String actionType : BaseAction.getTypes()) {
-            Map<String, Map<String, Object>> fieldMappings = BaseAction.getCustomMappingsByType(actionType);
-            if(fieldMappings == null)
-                continue;
-
-            elasticsearchClient.admin().indices()
-                    .preparePutMapping(getIndexName())
-                    .setType(actionType)
-                    .setSource(
-                            XContentFactory.jsonBuilder()
-                                    .startObject()
-                                    .field("properties", fieldMappings)
-                                    .endObject()
-                    )
-                    .execute()
-                    .actionGet();
-        }
-    }
 
     public ChangeQueryInterface getChangeQueryInterface() {
         return changeQueryInterface;
@@ -119,7 +79,6 @@ public class FoxelLog extends JavaPlugin {
     @Override
     public void onDisable() {
         listener.disable();
-        elasticsearchNode.close();
-        elasticsearchClient.close();
+        mongoClient.close();
     }
 }

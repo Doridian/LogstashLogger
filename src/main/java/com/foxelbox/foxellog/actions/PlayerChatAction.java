@@ -16,44 +16,35 @@
  */
 package com.foxelbox.foxellog.actions;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import org.bukkit.entity.HumanEntity;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 
-import java.io.IOException;
 import java.util.Map;
 
-public class PlayerChatAction extends PlayerAction {
+public class PlayerChatAction extends BaseAction {
 	private final String message;
 
 	public PlayerChatAction(HumanEntity user, String message) {
-		super(user);
+		super(user, user.getLocation());
 		this.message = message;
 	}
 
-    protected PlayerChatAction(Map<String, Object> fields) {
+    protected PlayerChatAction(DBObject fields) {
         super(fields);
         this.message = (String)fields.get("message");
     }
 
     @Override
-    protected Map<String, Map<String, Object>> getCustomMappings() throws IOException {
-        Map<String, Map<String, Object>> retMap = super.getCustomMappings();
-
-        retMap.put("message", builderBasicTypeMapping("string", null, null));
-
-        return retMap;
-    }
-
-    @Override
-    public String getType() {
+    public String getActionType() {
         return "player_chat";
     }
 
     @Override
-    public XContentBuilder toJSONObject(XContentBuilder builder) throws IOException {
-        builder = super.toJSONObject(builder);
+    protected BasicDBObject toBasicDBObject(BasicDBObject builder) {
+        builder = super.toBasicDBObject(builder);
 
-		builder.field("message", message);
+		builder.append("message", message);
 
 		return builder;
 	}

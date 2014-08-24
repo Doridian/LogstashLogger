@@ -16,15 +16,15 @@
  */
 package com.foxelbox.foxellog.actions;
 
+import com.mongodb.BasicDBObject;
+import com.mongodb.DBObject;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
-import org.elasticsearch.common.xcontent.XContentBuilder;
 
-import java.io.IOException;
 import java.util.Map;
 
-public class PlayerInventoryAction extends PlayerAndLocationAction {
+public class PlayerInventoryAction extends BaseAction {
 	private final Material block;
 	private final Material container;
 	private final int amount;
@@ -36,7 +36,7 @@ public class PlayerInventoryAction extends PlayerAndLocationAction {
 		this.amount = amount;
 	}
 
-    protected PlayerInventoryAction(Map<String, Object> fields) {
+    protected PlayerInventoryAction(DBObject fields) {
         super(fields);
         this.amount = (Integer)fields.get("amount");
         this.block = Material.getMaterial((String)fields.get("block"));
@@ -44,28 +44,17 @@ public class PlayerInventoryAction extends PlayerAndLocationAction {
     }
 
     @Override
-    protected Map<String, Map<String, Object>> getCustomMappings() throws IOException {
-        Map<String, Map<String, Object>> retMap = super.getCustomMappings();
-
-        retMap.put("block", builderBasicTypeMapping("string", "not_analyzed", null));
-        retMap.put("container", builderBasicTypeMapping("string", "not_analyzed", null));
-        retMap.put("amount", builderBasicTypeMapping("integer", null, null));
-
-        return retMap;
-    }
-
-    @Override
-    public String getType() {
+    public String getActionType() {
         return "player_inventory_change";
     }
 
     @Override
-    public XContentBuilder toJSONObject(XContentBuilder builder) throws IOException {
-        builder = super.toJSONObject(builder);
+    protected BasicDBObject toBasicDBObject(BasicDBObject builder) {
+        builder = super.toBasicDBObject(builder);
 
-		builder.field("block", block.name());
-		builder.field("container", container.name());
-		builder.field("amount", amount);
+		builder.append("block", block.name());
+		builder.append("container", container.name());
+		builder.append("amount", amount);
 
 		return builder;
 	}
