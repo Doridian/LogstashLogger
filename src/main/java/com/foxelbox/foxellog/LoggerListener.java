@@ -103,12 +103,12 @@ public class LoggerListener implements Listener {
 		queueAction(new PlayerAction(event.getPlayer(), "quit"));
 	}
 
-	@EventHandler(priority = EventPriority.MONITOR) //DO NOt ignoreCancelled = true!!!
+	@EventHandler(priority = EventPriority.MONITOR) //DO NOT ignoreCancelled = true!!!
 	public void onPlayerChat(AsyncPlayerChatEvent event) {
 		queueAction(new PlayerChatAction(event.getPlayer(), event.getMessage()));
 	}
 
-	@EventHandler(priority = EventPriority.MONITOR) //DO NOt ignoreCancelled = true!!!
+	@EventHandler(priority = EventPriority.MONITOR) //DO NOT ignoreCancelled = true!!!
 	public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
 		queueAction(new PlayerChatAction(event.getPlayer(), event.getMessage()));
 	}
