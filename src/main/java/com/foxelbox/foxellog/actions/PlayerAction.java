@@ -21,7 +21,7 @@ import org.elasticsearch.common.xcontent.XContentBuilder;
 
 import java.io.IOException;
 
-public class PlayerAction extends BaseAction {
+public abstract class PlayerAction extends BaseAction {
 	private final HumanEntity user;
 
 	public PlayerAction(HumanEntity user, String action) {
