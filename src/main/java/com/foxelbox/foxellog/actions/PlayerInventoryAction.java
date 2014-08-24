@@ -20,8 +20,10 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.search.SearchHitField;
 
 import java.io.IOException;
+import java.util.Map;
 
 public class PlayerInventoryAction extends PlayerAndLocationAction {
 	private final Material material;
@@ -34,6 +36,13 @@ public class PlayerInventoryAction extends PlayerAndLocationAction {
 		this.container = container;
 		this.amount = amount;
 	}
+
+    protected PlayerInventoryAction(Map<String, SearchHitField> fields) {
+        super(fields);
+        this.amount = fields.get("amount").value();
+        this.material = Material.getMaterial((String)fields.get("block").value());
+        this.container = Material.getMaterial((String)fields.get("container").value());
+    }
 
     @Override
     public String getType() {

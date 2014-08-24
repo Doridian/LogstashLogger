@@ -16,17 +16,27 @@
  */
 package com.foxelbox.foxellog.actions;
 
+import com.foxelbox.foxellog.FoxelLog;
+import org.bukkit.Location;
 import org.bukkit.entity.HumanEntity;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.search.SearchHitField;
 
 import java.io.IOException;
+import java.util.Map;
+import java.util.UUID;
 
 public abstract class PlayerAction extends BaseAction {
 	private final HumanEntity user;
 
-	public PlayerAction(HumanEntity user) {
+    protected PlayerAction(HumanEntity user) {
 		this.user = user;
 	}
+
+    protected PlayerAction(Map<String, SearchHitField> fields) {
+        super(fields);
+        user = FoxelLog.instance.getServer().getPlayer(UUID.fromString((String)fields.get("user_uuid").value()));
+    }
 
 	@Override
     public XContentBuilder toJSONObject(XContentBuilder builder) throws IOException {

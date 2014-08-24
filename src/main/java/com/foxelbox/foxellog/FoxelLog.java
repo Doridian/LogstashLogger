@@ -33,8 +33,10 @@ public class FoxelLog extends JavaPlugin {
 
     public Configuration configuration;
 
-    public Client elasticsearchClient;
+    Client elasticsearchClient;
     private Node elasticsearchNode;
+
+    private ChangeQueryInterface changeQueryInterface;
 
     private String INDEX_NAME;
     public String getIndexName() {
@@ -63,10 +65,17 @@ public class FoxelLog extends JavaPlugin {
 
         listener = new LoggerListener(this);
 		getServer().getPluginManager().registerEvents(listener, this);
+
+        changeQueryInterface = new ChangeQueryInterface(this);
 	}
+
+    public ChangeQueryInterface getChangeQueryInterface() {
+        return changeQueryInterface;
+    }
 
     @Override
     public void onDisable() {
         elasticsearchNode.close();
+        elasticsearchClient.close();
     }
 }

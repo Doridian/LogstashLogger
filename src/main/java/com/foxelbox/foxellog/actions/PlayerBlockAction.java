@@ -16,12 +16,15 @@
  */
 package com.foxelbox.foxellog.actions;
 
+import com.foxelbox.foxellog.FoxelLog;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
 import org.elasticsearch.common.xcontent.XContentBuilder;
+import org.elasticsearch.search.SearchHitField;
 
 import java.io.IOException;
+import java.util.Map;
 
 public class PlayerBlockAction extends PlayerAndLocationAction {
 	private final Material materialBefore;
@@ -32,6 +35,12 @@ public class PlayerBlockAction extends PlayerAndLocationAction {
 		this.materialBefore = materialBefore;
 		this.materialAfter = materialAfter;
 	}
+
+    protected PlayerBlockAction(Map<String, SearchHitField> fields) {
+        super(fields);
+        this.materialBefore = Material.getMaterial((String)fields.get("block_from").value());
+        this.materialAfter = Material.getMaterial((String)fields.get("block_to").value());
+    }
 
     @Override
     public String getType() {
