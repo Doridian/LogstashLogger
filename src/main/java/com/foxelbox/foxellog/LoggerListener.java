@@ -20,8 +20,7 @@ import com.foxelbox.foxellog.actions.BaseAction;
 import com.foxelbox.foxellog.actions.PlayerBlockAction;
 import com.foxelbox.foxellog.actions.PlayerInventoryAction;
 import com.foxelbox.foxellog.util.BukkitUtils;
-import com.mongodb.DB;
-import com.mongodb.DBCollection;
+import com.mongodb.*;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.BlockState;
@@ -62,15 +61,21 @@ public class LoggerListener implements Listener {
                         Thread.sleep(100);
                     } catch (InterruptedException e) { }
 
-                    BaseAction action;
-                    final DB db = plugin.getMongoDB();
-                    final DBCollection collection = db.getCollection(BaseAction.getCollection());
-                    while ((action = queuedActions.poll()) != null) {
+                    while (!queuedActions.isEmpty()) {
+                        final DB db = plugin.getMongoDB();
+                        final DBCollection collection = db.getCollection(BaseAction.getCollection());
+                        final BulkWriteOperation bulkWriteOperation = collection.initializeUnorderedBulkOperation();
+
+                        DBObject action;
+                        int requestCount = 0;
+                        while ((++requestCount < 100) && ((action = queuedActions.poll()) != null))
+                            bulkWriteOperation.insert(action);
+
                         try {
-                            collection.insert(action.toDBObject());
-                        } catch (Exception e) {
-                            queuedActions.add(action);
-                            e.printStackTrace();
+                            bulkWriteOperation.execute();
+                        } catch (BulkWriteException e) {
+                            for(BulkWriteError error : e.getWriteErrors())
+                                queuedActions.add(error.getDetails());
                             try {
                                 Thread.sleep(1000);
                             } catch (InterruptedException ex) { }
@@ -91,11 +96,11 @@ public class LoggerListener implements Listener {
         } catch (InterruptedException e) { }
     }
 
-    private final Queue<BaseAction> queuedActions = new ConcurrentLinkedQueue<>();
+    private final Queue<DBObject> queuedActions = new ConcurrentLinkedQueue<>();
     private void queueAction(BaseAction action) {
         if(!enabled)
             return;
-        queuedActions.add(action);
+        queuedActions.add(action.toDBObject());
     }
 
 	private void addBlockChange(HumanEntity user, Location location, Material materialBefore, Material materialAfter) {
