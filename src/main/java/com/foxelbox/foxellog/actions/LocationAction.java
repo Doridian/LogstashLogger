@@ -18,7 +18,6 @@ package com.foxelbox.foxellog.actions;
 
 import org.bukkit.Location;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.json.simple.JSONObject;
 
 import java.io.IOException;
 

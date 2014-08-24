@@ -18,14 +18,9 @@ package com.foxelbox.foxellog.actions;
 
 import com.foxelbox.foxellog.FoxelLog;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.json.simple.JSONObject;
 
 import java.io.IOException;
-import java.net.InetAddress;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.TimeZone;
 
 public abstract class BaseAction {
 	private final Date timestamp = new Date();

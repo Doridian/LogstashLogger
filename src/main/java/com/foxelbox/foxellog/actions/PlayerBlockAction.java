@@ -20,7 +20,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
 import org.elasticsearch.common.xcontent.XContentBuilder;
-import org.json.simple.JSONObject;
 
 import java.io.IOException;
 
