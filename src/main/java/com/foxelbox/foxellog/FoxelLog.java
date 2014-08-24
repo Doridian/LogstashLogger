@@ -17,33 +17,49 @@
 package com.foxelbox.foxellog;
 
 import com.foxelbox.dependencies.config.Configuration;
-import com.foxelbox.dependencies.redis.RedisManager;
-import com.foxelbox.dependencies.threading.SimpleThreadCreator;
-import com.foxelbox.foxellog.redis.RedisQueueThread;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.elasticsearch.client.Client;
+import org.elasticsearch.common.settings.ImmutableSettings;
+import org.elasticsearch.node.Node;
+import org.elasticsearch.node.NodeBuilder;
+
+import java.io.File;
 
 public class FoxelLog extends JavaPlugin {
 	public static FoxelLog instance;
 
 	@SuppressWarnings("FieldCanBeLocal")
 	private LoggerListener listener;
-	@SuppressWarnings("FieldCanBeLocal")
-	private RedisQueueThread redisQueueThread;
 
     public Configuration configuration;
 
-    public RedisManager redisManager;
+    public Client elasticsearchClient;
+    private Node elasticsearchNode;
 
 	@Override
 	public void onEnable() {
 		instance = this;
 		super.onEnable();
         configuration = new Configuration(getDataFolder());
-        redisManager = new RedisManager(new SimpleThreadCreator(), configuration);
 
-		listener = new LoggerListener();
-		redisQueueThread = new RedisQueueThread();
+        ImmutableSettings.Builder settings;
+        try {
+            settings = ImmutableSettings.settingsBuilder()
+                    .classLoader(this.getClassLoader())
+                    .loadFromUrl(new File(getDataFolder(), "elasticsearch.yml").toURI().toURL());
+        } catch (Exception e) {
+            throw new RuntimeException(e);
+        }
+
+        elasticsearchNode = NodeBuilder.nodeBuilder().settings(settings).client(true).node();
+        elasticsearchClient = elasticsearchNode.client();
+
+        listener = new LoggerListener();
 		getServer().getPluginManager().registerEvents(listener, this);
-		redisQueueThread.start();
 	}
+
+    @Override
+    public void onDisable() {
+        elasticsearchNode.close();
+    }
 }

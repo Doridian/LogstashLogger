@@ -19,7 +19,10 @@ package com.foxelbox.foxellog.actions;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.json.simple.JSONObject;
+
+import java.io.IOException;
 
 public class PlayerBlockAction extends PlayerAndLocationAction {
 	private final Material materialBefore;
@@ -31,10 +34,12 @@ public class PlayerBlockAction extends PlayerAndLocationAction {
 		this.materialAfter = materialAfter;
 	}
 
-	public JSONObject toJSONObject() {
-		final JSONObject thisBlockChange = super.toJSONObject();
-		thisBlockChange.put("block_from", materialBefore.name());
-		thisBlockChange.put("block_to", materialAfter.name());
-		return thisBlockChange;
+    public XContentBuilder toJSONObject(XContentBuilder builder) throws IOException {
+        builder = super.toJSONObject(builder);
+
+		builder.field("block_from", materialBefore.name());
+		builder.field("block_to", materialAfter.name());
+
+		return builder;
 	}
 }

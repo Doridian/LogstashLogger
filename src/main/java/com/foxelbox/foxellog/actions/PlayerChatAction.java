@@ -17,7 +17,10 @@
 package com.foxelbox.foxellog.actions;
 
 import org.bukkit.entity.HumanEntity;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.json.simple.JSONObject;
+
+import java.io.IOException;
 
 public class PlayerChatAction extends PlayerAction {
 	private final String message;
@@ -28,9 +31,11 @@ public class PlayerChatAction extends PlayerAction {
 	}
 
 	@Override
-	public JSONObject toJSONObject() {
-		final JSONObject thisBlockChange = super.toJSONObject();
-		thisBlockChange.put("message", message);
-		return thisBlockChange;
+    public XContentBuilder toJSONObject(XContentBuilder builder) throws IOException {
+        builder = super.toJSONObject(builder);
+
+		builder.field("message", message);
+
+		return builder;
 	}
 }

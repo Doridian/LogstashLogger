@@ -16,11 +16,7 @@
  */
 package com.foxelbox.foxellog;
 
-import com.foxelbox.foxellog.actions.PlayerAction;
-import com.foxelbox.foxellog.actions.PlayerBlockAction;
-import com.foxelbox.foxellog.actions.PlayerChatAction;
-import com.foxelbox.foxellog.actions.PlayerInventoryAction;
-import com.foxelbox.foxellog.redis.RedisQueueThread;
+import com.foxelbox.foxellog.actions.*;
 import com.foxelbox.foxellog.util.BukkitUtils;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -37,13 +33,28 @@ import org.bukkit.event.inventory.InventoryOpenEvent;
 import org.bukkit.event.player.*;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
+import org.elasticsearch.common.xcontent.XContentFactory;
 
 import java.util.HashMap;
 import java.util.Map;
 
 public class LoggerListener implements Listener {
+    private void queueAction(BaseAction action) {
+        try {
+            FoxelLog.instance.elasticsearchClient
+                    .prepareIndex(BaseAction.getIndexName(), "change")
+                    .setSource(
+                            action.toJSONObject(
+                                    XContentFactory.jsonBuilder().startObject()
+                            ).endObject()
+                    ).execute().actionGet();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
 	private void addBlockChange(HumanEntity user, Location location, Material materialBefore, Material materialAfter) {
-		RedisQueueThread.queueAction(new PlayerBlockAction(user, location, materialBefore, materialAfter));
+		queueAction(new PlayerBlockAction(user, location, materialBefore, materialAfter));
 	}
 
 	//BLOCK PLAYER EVENTS
@@ -79,22 +90,22 @@ public class LoggerListener implements Listener {
 	//BASE PLAYER EVENTS
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onPlayerJoin(PlayerJoinEvent event) {
-		RedisQueueThread.queueAction(new PlayerAction(event.getPlayer(), "join"));
+		queueAction(new PlayerAction(event.getPlayer(), "join"));
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR, ignoreCancelled = true)
 	public void onPlayerQuit(PlayerQuitEvent event) {
-		RedisQueueThread.queueAction(new PlayerAction(event.getPlayer(), "quit"));
+		queueAction(new PlayerAction(event.getPlayer(), "quit"));
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR) //DO NOt ignoreCancelled = true!!!
 	public void onPlayerChat(AsyncPlayerChatEvent event) {
-		RedisQueueThread.queueAction(new PlayerChatAction(event.getPlayer(), event.getMessage()));
+		queueAction(new PlayerChatAction(event.getPlayer(), event.getMessage()));
 	}
 
 	@EventHandler(priority = EventPriority.MONITOR) //DO NOt ignoreCancelled = true!!!
 	public void onPlayerCommandPreprocess(PlayerCommandPreprocessEvent event) {
-		RedisQueueThread.queueAction(new PlayerChatAction(event.getPlayer(), event.getMessage()));
+		queueAction(new PlayerChatAction(event.getPlayer(), event.getMessage()));
 	}
 
 	//INVENTORY PLAYER EVENTS
@@ -112,7 +123,7 @@ public class LoggerListener implements Listener {
 				final Location loc = BukkitUtils.getInventoryHolderLocation(holder);
 				final Material block = loc.getBlock().getType();
 				for (final ItemStack item : diff) {
-					RedisQueueThread.queueAction(new PlayerInventoryAction(player, loc, block, item.getType(), item.getAmount()));
+					queueAction(new PlayerInventoryAction(player, loc, block, item.getType(), item.getAmount()));
 				}
 				containers.remove(player);
 			}

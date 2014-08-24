@@ -17,7 +17,10 @@
 package com.foxelbox.foxellog.actions;
 
 import org.bukkit.entity.HumanEntity;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.json.simple.JSONObject;
+
+import java.io.IOException;
 
 public class PlayerAction extends BaseAction {
 	private final HumanEntity user;
@@ -28,10 +31,12 @@ public class PlayerAction extends BaseAction {
 	}
 
 	@Override
-	public JSONObject toJSONObject() {
-		final JSONObject thisBlockChange = super.toJSONObject();
-		thisBlockChange.put("username", user.getName());
-		thisBlockChange.put("useruuid", user.getUniqueId().toString());
-		return thisBlockChange;
+    public XContentBuilder toJSONObject(XContentBuilder builder) throws IOException {
+        builder = super.toJSONObject(builder);
+
+		//builder.field("user_name", user.getName());
+		builder.field("user_uuid", user.getUniqueId().toString());
+
+		return builder;
 	}
 }

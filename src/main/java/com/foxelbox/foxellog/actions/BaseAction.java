@@ -17,8 +17,10 @@
 package com.foxelbox.foxellog.actions;
 
 import com.foxelbox.foxellog.FoxelLog;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.json.simple.JSONObject;
 
+import java.io.IOException;
 import java.net.InetAddress;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -29,42 +31,20 @@ public abstract class BaseAction {
 	private final Date timestamp = new Date();
 	private final String action;
 
-	private static final String HOSTNAME;
-	private static final DateFormat JSON_DATE_FORMAT;
-
-	static {
-		String _hostname;
-		try {
-			_hostname = InetAddress.getLocalHost().getHostName();
-		} catch (Exception e) {
-			e.printStackTrace();
-			_hostname = "N/A";
-		}
-		HOSTNAME = _hostname;
-
-		TimeZone tz = TimeZone.getTimeZone("UTC");
-		DateFormat df = new SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss.SSS'Z'");
-		df.setTimeZone(tz);
-		JSON_DATE_FORMAT = df;
-	}
+    private static final String INDEX_NAME = "foxellog_" + FoxelLog.instance.configuration.getValue("server-name", "N/A").toLowerCase();
+    public static String getIndexName() {
+        return INDEX_NAME;
+    }
 
 	public BaseAction(String action) {
 		this.action = action;
 	}
 
-	public JSONObject toJSONObject() {
-		final JSONObject thisBlockChange = new JSONObject();
+	public XContentBuilder toJSONObject(XContentBuilder builder) throws IOException {
+        builder.field("date", timestamp);
+        builder.field("action", action);
 
-		thisBlockChange.put("@version", "1");
-		thisBlockChange.put("@timestamp", JSON_DATE_FORMAT.format(timestamp));
-		thisBlockChange.put("type", "minecraft_action");
-
-		thisBlockChange.put("action", action);
-
-		thisBlockChange.put("host", HOSTNAME);
-		thisBlockChange.put("server", FoxelLog.instance.configuration.getValue("server-name", "N/A"));
-
-		return thisBlockChange;
+		return builder;
 	}
 
 }

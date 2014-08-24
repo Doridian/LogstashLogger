@@ -17,7 +17,10 @@
 package com.foxelbox.foxellog.actions;
 
 import org.bukkit.Location;
+import org.elasticsearch.common.xcontent.XContentBuilder;
 import org.json.simple.JSONObject;
+
+import java.io.IOException;
 
 public abstract class LocationAction extends BaseAction {
 	private final Location location;
@@ -28,12 +31,15 @@ public abstract class LocationAction extends BaseAction {
 	}
 
 	@Override
-	public JSONObject toJSONObject() {
-		final JSONObject thisBlockChange = super.toJSONObject();
-		thisBlockChange.put("x", location.getX());
-		thisBlockChange.put("y", location.getY());
-		thisBlockChange.put("z", location.getZ());
-		thisBlockChange.put("world", location.getWorld().getName());
-		return thisBlockChange;
+	public XContentBuilder toJSONObject(XContentBuilder builder) throws IOException {
+        builder = super.toJSONObject(builder);
+        
+		builder.field("x", location.getX());
+		builder.field("y", location.getY());
+		builder.field("z", location.getZ());
+
+		builder.field("world", location.getWorld().getName());
+
+		return builder;
 	}
 }
