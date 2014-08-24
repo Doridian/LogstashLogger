@@ -20,8 +20,6 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import org.bukkit.entity.HumanEntity;
 
-import java.util.Map;
-
 public class PlayerChatAction extends BaseAction {
 	private final String message;
 

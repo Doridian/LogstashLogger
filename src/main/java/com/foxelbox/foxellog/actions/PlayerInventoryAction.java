@@ -22,8 +22,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
 
-import java.util.Map;
-
 public class PlayerInventoryAction extends BaseAction {
 	private final Material block;
 	private final Material container;

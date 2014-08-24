@@ -17,20 +17,16 @@
 package com.foxelbox.foxellog;
 
 import com.foxelbox.dependencies.config.Configuration;
-import com.foxelbox.foxellog.actions.BaseAction;
 import com.foxelbox.foxellog.commands.FLCommand;
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.io.File;
 import java.io.IOException;
-import java.util.Map;
 
 public class FoxelLog extends JavaPlugin {
 	public static FoxelLog instance;
 
-	@SuppressWarnings("FieldCanBeLocal")
 	private LoggerListener listener;
 
     public Configuration configuration;

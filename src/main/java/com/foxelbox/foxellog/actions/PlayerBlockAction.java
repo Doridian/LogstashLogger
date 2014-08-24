@@ -22,8 +22,6 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
 
-import java.util.Map;
-
 public class PlayerBlockAction extends BaseAction {
 	private final Material blockFrom;
 	private final Material blockTo;

@@ -22,9 +22,6 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import org.bukkit.Location;
 import org.bukkit.entity.HumanEntity;
-import org.joda.time.DateTime;
-import org.joda.time.format.DateTimeFormatter;
-import org.joda.time.format.ISODateTimeFormat;
 import org.objenesis.ObjenesisStd;
 
 import java.lang.reflect.Constructor;
@@ -36,8 +33,6 @@ public abstract class BaseAction {
 	private final Date date;
     private final HumanEntity user;
     private final Location location;
-
-    private static final DateTimeFormatter DATE_TIME_FORMATTER = ISODateTimeFormat.dateTime();
 
     public abstract String getActionType();
 
