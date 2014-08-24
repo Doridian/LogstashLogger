@@ -24,8 +24,7 @@ import java.io.IOException;
 public abstract class PlayerAction extends BaseAction {
 	private final HumanEntity user;
 
-	public PlayerAction(HumanEntity user, String action) {
-		super("player_" + action);
+	public PlayerAction(HumanEntity user) {
 		this.user = user;
 	}
 

@@ -29,13 +29,18 @@ public class PlayerInventoryAction extends PlayerAndLocationAction {
 	private final int amount;
 
 	public PlayerInventoryAction(HumanEntity user, Location location, Material container, Material material, int amount) {
-		super(user, "inventory", location);
+		super(user, location);
 		this.material = material;
 		this.container = container;
 		this.amount = amount;
 	}
 
-	@Override
+    @Override
+    public String getType() {
+        return "player_inventory_change";
+    }
+
+    @Override
     public XContentBuilder toJSONObject(XContentBuilder builder) throws IOException {
         builder = super.toJSONObject(builder);
 

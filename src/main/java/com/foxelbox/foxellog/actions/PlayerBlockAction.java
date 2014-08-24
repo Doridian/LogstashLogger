@@ -28,10 +28,15 @@ public class PlayerBlockAction extends PlayerAndLocationAction {
 	private final Material materialAfter;
 
 	public PlayerBlockAction(HumanEntity user, Location location, Material materialBefore, Material materialAfter) {
-		super(user, "block_change", location);
+		super(user, location);
 		this.materialBefore = materialBefore;
 		this.materialAfter = materialAfter;
 	}
+
+    @Override
+    public String getType() {
+        return "player_block_change";
+    }
 
     public XContentBuilder toJSONObject(XContentBuilder builder) throws IOException {
         builder = super.toJSONObject(builder);

@@ -25,11 +25,16 @@ public class PlayerChatAction extends PlayerAction {
 	private final String message;
 
 	public PlayerChatAction(HumanEntity user, String message) {
-		super(user, "chat");
+		super(user);
 		this.message = message;
 	}
 
-	@Override
+    @Override
+    public String getType() {
+        return "player_chat";
+    }
+
+    @Override
     public XContentBuilder toJSONObject(XContentBuilder builder) throws IOException {
         builder = super.toJSONObject(builder);
 

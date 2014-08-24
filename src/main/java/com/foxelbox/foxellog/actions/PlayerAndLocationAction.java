@@ -25,8 +25,8 @@ import java.io.IOException;
 public abstract class PlayerAndLocationAction extends PlayerAction {
 	private final Location location;
 
-	public PlayerAndLocationAction(HumanEntity user, String action, Location location) {
-		super(user, action);
+	public PlayerAndLocationAction(HumanEntity user, Location location) {
+		super(user);
 		this.location = location;
 	}
 

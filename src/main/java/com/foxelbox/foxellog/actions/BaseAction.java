@@ -16,7 +16,6 @@
  */
 package com.foxelbox.foxellog.actions;
 
-import com.foxelbox.foxellog.FoxelLog;
 import org.elasticsearch.common.xcontent.XContentBuilder;
 
 import java.io.IOException;
@@ -24,16 +23,11 @@ import java.util.Date;
 
 public abstract class BaseAction {
 	private final Date timestamp = new Date();
-	private final String action;
 
-	public BaseAction(String action) {
-		this.action = action;
-	}
+    public abstract String getType();
 
 	public XContentBuilder toJSONObject(XContentBuilder builder) throws IOException {
         builder.field("date", timestamp);
-        builder.field("action", action);
-
 		return builder;
 	}
 

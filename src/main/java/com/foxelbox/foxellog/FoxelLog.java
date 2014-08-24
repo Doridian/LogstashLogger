@@ -40,9 +40,6 @@ public class FoxelLog extends JavaPlugin {
     public String getIndexName() {
         return INDEX_NAME;
     }
-    public String getTypeName() {
-        return "change";
-    }
 
 	@Override
 	public void onEnable() {

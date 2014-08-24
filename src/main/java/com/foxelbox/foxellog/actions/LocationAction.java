@@ -24,8 +24,7 @@ import java.io.IOException;
 public abstract class LocationAction extends BaseAction {
 	private final Location location;
 
-	public LocationAction(String action, Location location) {
-		super(action);
+	public LocationAction(Location location) {
 		this.location = location;
 	}
 

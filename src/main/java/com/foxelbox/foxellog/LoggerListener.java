@@ -47,7 +47,7 @@ public class LoggerListener implements Listener {
     private void queueAction(BaseAction action) {
         try {
             plugin.elasticsearchClient
-                    .prepareIndex(plugin.getIndexName(), plugin.getTypeName())
+                    .prepareIndex(plugin.getIndexName(), action.getType())
                     .setSource(
                             action.toJSONObject(
                                     XContentFactory.jsonBuilder().startObject()
