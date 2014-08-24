@@ -54,7 +54,7 @@ public abstract class BaseAction {
         for(Class<? extends BaseAction> clazz : ClassUtils.getSubClasses(BaseAction.class, BaseAction.class.getPackage().getName())) {
             if (!Modifier.isAbstract(clazz.getModifiers())) {
                 try {
-                    typeToClassMap.put(objenesisStd.newInstance(clazz).getType(), clazz.getConstructor(Map.class));
+                    typeToClassMap.put(objenesisStd.newInstance(clazz).getType(), clazz.getDeclaredConstructor(Map.class));
                 } catch (NoSuchMethodException e) {
                     e.printStackTrace();
                 }
