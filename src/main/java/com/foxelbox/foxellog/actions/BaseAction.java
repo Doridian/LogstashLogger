@@ -35,6 +35,7 @@ public abstract class BaseAction {
     private final HumanEntity user;
     private final Location location;
     private final Object dbID;
+    public int state;
 
     public abstract String getActionType();
 
@@ -47,12 +48,14 @@ public abstract class BaseAction {
         this.user = user;
         this.location = location;
         this.dbID = null;
+        this.state = 0;
     }
 
     protected BaseAction(DBObject fields) {
         dbID = fields.get("_id");
         date = (Date)fields.get("date");
         user = FoxelLog.instance.getServer().getPlayer((UUID)fields.get("user_uuid"));
+        state = (int)fields.get("state");
 
         final DBObject locationFields = (DBObject)fields.get("location");
         location = new Location(FoxelLog.instance.getServer().getWorld((String)locationFields.get("world")), (double)locationFields.get("x"), (double)locationFields.get("y"), (double)locationFields.get("z"));
@@ -77,7 +80,7 @@ public abstract class BaseAction {
         //builder.field("user_name", user.getName());
         builder.append("user_uuid", user.getUniqueId());
 
-        builder.append("state", 0);
+        builder.append("state", state);
 
 		return builder;
 	}

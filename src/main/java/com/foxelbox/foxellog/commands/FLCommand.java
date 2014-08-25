@@ -242,7 +242,8 @@ public class FLCommand implements CommandExecutor {
                         currentMaterial = setMaterials.get(currentLocation);
 
                         if (currentMaterial.equals(action.getBlockTo())) {
-                            collection.update(new BasicDBObject("_id", action.getDbID()), new BasicDBObject("state", 1));
+                            action.state = 1;
+                            collection.update(new BasicDBObject("_id", action.getDbID()), action.toDBObject());
                             setMaterials.put(currentLocation, action.getBlockFrom());
                         }
                     }
@@ -277,7 +278,8 @@ public class FLCommand implements CommandExecutor {
                         currentMaterial = setMaterials2.get(currentLocation);
 
                         if (currentMaterial.equals(action.getBlockFrom())) {
-                            collection.update(new BasicDBObject("_id", action.getDbID()), new BasicDBObject("state", 0));
+                            action.state = 0;
+                            collection.update(new BasicDBObject("_id", action.getDbID()), action.toDBObject());
                             setMaterials2.put(currentLocation, action.getBlockTo());
                         }
                     }
