@@ -134,6 +134,12 @@ public class FLCommand implements CommandExecutor {
                 case "area":
                     area = Integer.parseInt(param);
                     break;
+                case "since":
+                    //All newer than X time
+                    break;
+                case "before":
+                    //All older than X time
+                    break;
                 case "rollback":
                     performMode = PerformMode.ROLLBACK;
                     i--;
