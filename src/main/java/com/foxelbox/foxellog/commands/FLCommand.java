@@ -26,6 +26,7 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -72,6 +73,10 @@ public class FLCommand implements CommandExecutor {
         GET
     }
 
+    private BasicDBObject makeRange(int pos, int range) {
+        return new BasicDBObject("$gte", pos - range).append("$lte", pos + range);
+    }
+
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String commandName, String[] args) {
         DBCollection collection = plugin.getMongoDB().getCollection(BaseAction.getCollection());
@@ -81,21 +86,53 @@ public class FLCommand implements CommandExecutor {
         AggregationMode aggregationMode = null;
         PerformMode performMode = PerformMode.GET;
 
-        for(int i = 0; i < args.length; i += 2) {
-            final String arg = args[i];
+        boolean worldSet = false;
+        Location setLocation = (commandSender instanceof Player) ? ((Player)commandSender).getLocation() : new Location(plugin.getServer().getWorlds().get(0), 0, 0, 0);
+        int area = -1;
 
-            final String param;
-            if(i < args.length - 1)
-                param = args[i + 1];
-            else
-                param = "";
+        for(int i = 0; i < args.length; i += 2) {
+            String arg = args[i];
+            String param = (i < args.length - 1) ? args[i + 1] : "";
 
             switch(arg.toLowerCase()) {
                 case "self":
                 case "me":
                 case "myself":
-                    query = query.append("user_uuid", ((Player)commandSender).getUniqueId());
+                    param = "me";
                     i--;
+                case "player":
+                    final Set<UUID> playersToMatch = new HashSet<>();
+                    for(final String ply : param.split(",")) {
+                        if (ply.equals("self") || ply.equals("myself") || ply.equals("me"))
+                            playersToMatch.add(((Player) commandSender).getUniqueId());
+                        else
+                            playersToMatch.add(plugin.getServer().getPlayer(param).getUniqueId());
+                    }
+
+                    final int size = playersToMatch.size();
+                    if(size == 1)
+                        query.put("user_uuid", playersToMatch.iterator().next());
+                    else if(size > 1)
+                        query.put("user_uuid", new BasicDBObject("$in", playersToMatch.toArray(new UUID[size])));
+                    break;
+                case "world":
+                    worldSet = true;
+                    setLocation.setWorld(plugin.getServer().getWorld(param));
+                    break;
+                case "loc":
+                case "location":
+                    String[] locs = param.split("[,;]");
+                    if(locs.length == 2) {
+                        setLocation.setX(Integer.parseInt(locs[0]));
+                        setLocation.setZ(Integer.parseInt(locs[1]));
+                    } else if(locs.length == 3) {
+                        setLocation.setX(Integer.parseInt(locs[0]));
+                        setLocation.setY(Integer.parseInt(locs[1]));
+                        setLocation.setZ(Integer.parseInt(locs[2]));
+                    }
+                    break;
+                case "area":
+                    area = Integer.parseInt(param);
                     break;
                 case "rollback":
                     performMode = PerformMode.ROLLBACK;
@@ -105,11 +142,7 @@ public class FLCommand implements CommandExecutor {
                     performMode = PerformMode.REDO;
                     i--;
                     break;
-                case "player":
-                    query = query.append("user_uuid", plugin.getServer().getPlayer(param).getUniqueId());
-                    break;
                 case "sum":
-                    query = query.append("type", "player_block_change");
                     switch(param.toLowerCase()) {
                         case "player":
                         case "players":
@@ -129,9 +162,22 @@ public class FLCommand implements CommandExecutor {
             return false;
         }
 
+        if(area >= 0) {
+            query = query.append("location",
+                    new BasicDBObject("world", setLocation.getWorld().getName())
+                        .append("x", makeRange(setLocation.getBlockX(), area))
+                        .append("y", makeRange(setLocation.getBlockY(), area))
+                        .append("z", makeRange(setLocation.getBlockZ(), area))
+            );
+        } else if(worldSet) {
+            query = query.append("location", new BasicDBObject("world", setLocation.getWorld().getName()));
+        }
+
         final long timeStart = System.nanoTime();
 
         if(aggregationMode != null) {
+            query = query.append("type", "player_block_change");
+
             ArrayList<DBObject> aggregationPipeline = new ArrayList<>();
 
             aggregationPipeline.add(new BasicDBObject("$match", query));
@@ -139,10 +185,6 @@ public class FLCommand implements CommandExecutor {
             BasicDBObject project = new BasicDBObject("_id", 0);
             project.put("blockFrom", 1);
             project.put("blockTo", 1);
-            //exception: The top-level _id field is the only field currently supported for exclusion
-            /*project.put("location", 0);
-            project.put("date", 0);
-            project.put("type", 0);*/
             aggregationPipeline.add(new BasicDBObject("$project", project));
             BasicDBObject groups = new BasicDBObject();
             aggregationPipeline.add(new BasicDBObject("$group", groups));
@@ -153,7 +195,6 @@ public class FLCommand implements CommandExecutor {
             switch(aggregationMode) {
                 case PLAYERS:
                     label = "Player";
-
                     project.put("user_uuid", 1);
 
                     groups.append("_id", "$user_uuid");
@@ -168,8 +209,6 @@ public class FLCommand implements CommandExecutor {
                     break;
                 case BLOCKS:
                     label = "Block";
-
-                    //project.put("user_uuid", 0);
 
                     Map<String, AggregationResult> resultMap = new HashMap<>();
 
