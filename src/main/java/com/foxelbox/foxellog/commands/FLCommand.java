@@ -26,12 +26,12 @@ import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.World;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
+import java.io.Serializable;
 import java.util.*;
 
 public class FLCommand implements CommandExecutor {
@@ -73,13 +73,7 @@ public class FLCommand implements CommandExecutor {
         GET
     }
 
-    private BasicDBObject makeRange(int pos, int range) {
-        return new BasicDBObject("$gte", pos - range).append("$lte", pos + range);
-    }
-
-    @Override
-    public boolean onCommand(CommandSender commandSender, Command command, String commandName, String[] args) {
-        DBCollection collection = plugin.getMongoDB().getCollection(BaseAction.getCollection());
+    public static class QueryParams implements Serializable {
         BasicDBObject query = new BasicDBObject();
         BasicDBObject sort = new BasicDBObject("date", -1);
 
@@ -87,12 +81,38 @@ public class FLCommand implements CommandExecutor {
         PerformMode performMode = PerformMode.GET;
 
         boolean worldSet = false;
-        Location setLocation = (commandSender instanceof Player) ? ((Player)commandSender).getLocation() : new Location(plugin.getServer().getWorlds().get(0), 0, 0, 0);
+        Location setLocation = null;
         int area = -1;
+    }
 
-        for(int i = 0; i < args.length; i += 2) {
-            String arg = args[i];
-            String param = (i < args.length - 1) ? args[i + 1] : "";
+    private BasicDBObject makeRange(int pos, int range) {
+        return new BasicDBObject("$gte", pos - range).append("$lte", pos + range);
+    }
+
+    private final HashMap<UUID, QueryParams> lastQueryParams = new HashMap<>();
+
+    @Override
+    public boolean onCommand(CommandSender commandSender, Command command, String commandName, String[] argsRaw) {
+        QueryParams queryParams = new QueryParams();
+        UUID myUUID = ((Player) commandSender).getUniqueId();
+
+        for(String arg : argsRaw)
+            if(arg.equalsIgnoreCase("last"))
+                queryParams = lastQueryParams.get(myUUID);
+
+        queryParams.aggregationMode = null;
+        queryParams.performMode = PerformMode.GET;
+
+        lastQueryParams.put(myUUID, queryParams);
+
+        DBCollection collection = plugin.getMongoDB().getCollection(BaseAction.getCollection());
+
+        if(queryParams.setLocation == null)
+            queryParams.setLocation = (commandSender instanceof Player) ? ((Player)commandSender).getLocation() : new Location(plugin.getServer().getWorlds().get(0), 0, 0, 0);
+
+        for(int i = 0; i < argsRaw.length; i += 2) {
+            String arg = argsRaw[i];
+            String param = (i < argsRaw.length - 1) ? argsRaw[i + 1] : "";
 
             switch(arg.toLowerCase()) {
                 case "self":
@@ -111,28 +131,28 @@ public class FLCommand implements CommandExecutor {
 
                     final int size = playersToMatch.size();
                     if(size == 1)
-                        query.put("user_uuid", playersToMatch.iterator().next());
+                        queryParams.query.put("user_uuid", playersToMatch.iterator().next());
                     else if(size > 1)
-                        query.put("user_uuid", new BasicDBObject("$in", playersToMatch.toArray(new UUID[size])));
+                        queryParams.query.put("user_uuid", new BasicDBObject("$in", playersToMatch.toArray(new UUID[size])));
                     break;
                 case "world":
-                    worldSet = true;
-                    setLocation.setWorld(plugin.getServer().getWorld(param));
+                    queryParams.worldSet = true;
+                    queryParams.setLocation.setWorld(plugin.getServer().getWorld(param));
                     break;
                 case "loc":
                 case "location":
-                    String[] locs = param.split("[,;]");
+                    String[] locs = param.split("[,;]+");
                     if(locs.length == 2) {
-                        setLocation.setX(Integer.parseInt(locs[0]));
-                        setLocation.setZ(Integer.parseInt(locs[1]));
+                        queryParams.setLocation.setX(Integer.parseInt(locs[0]));
+                        queryParams.setLocation.setZ(Integer.parseInt(locs[1]));
                     } else if(locs.length == 3) {
-                        setLocation.setX(Integer.parseInt(locs[0]));
-                        setLocation.setY(Integer.parseInt(locs[1]));
-                        setLocation.setZ(Integer.parseInt(locs[2]));
+                        queryParams.setLocation.setX(Integer.parseInt(locs[0]));
+                        queryParams.setLocation.setY(Integer.parseInt(locs[1]));
+                        queryParams.setLocation.setZ(Integer.parseInt(locs[2]));
                     }
                     break;
                 case "area":
-                    area = Integer.parseInt(param);
+                    queryParams.area = Integer.parseInt(param);
                     break;
                 case "since":
                     //All newer than X time
@@ -140,53 +160,56 @@ public class FLCommand implements CommandExecutor {
                 case "before":
                     //All older than X time
                     break;
+                case "last":
+                    i--; //Ignore!
+                    break;
                 case "rollback":
-                    performMode = PerformMode.ROLLBACK;
+                    queryParams.performMode = PerformMode.ROLLBACK;
                     i--;
                     break;
                 case "redo":
-                    performMode = PerformMode.REDO;
+                    queryParams.performMode = PerformMode.REDO;
                     i--;
                     break;
                 case "sum":
                     switch(param.toLowerCase()) {
                         case "player":
                         case "players":
-                            aggregationMode = AggregationMode.PLAYERS;
+                            queryParams.aggregationMode = AggregationMode.PLAYERS;
                             break;
                         case "block":
                         case "blocks":
-                            aggregationMode = AggregationMode.BLOCKS;
+                            queryParams.aggregationMode = AggregationMode.BLOCKS;
                             break;
                     }
                     break;
             }
         }
 
-        if(performMode != PerformMode.GET && aggregationMode != null) {
+        if(queryParams.performMode != PerformMode.GET && queryParams.aggregationMode != null) {
             commandSender.sendMessage("You can only use the display/default mode while aggregation/sum is turned on!");
             return false;
         }
 
-        if(area >= 0) {
-            query = query.append("location",
-                    new BasicDBObject("world", setLocation.getWorld().getName())
-                        .append("x", makeRange(setLocation.getBlockX(), area))
-                        .append("y", makeRange(setLocation.getBlockY(), area))
-                        .append("z", makeRange(setLocation.getBlockZ(), area))
+        if(queryParams.area >= 0) {
+            queryParams.query.put("location",
+                    new BasicDBObject("world", queryParams.setLocation.getWorld().getName())
+                        .append("x", makeRange(queryParams.setLocation.getBlockX(), queryParams.area))
+                        .append("y", makeRange(queryParams.setLocation.getBlockY(), queryParams.area))
+                        .append("z", makeRange(queryParams.setLocation.getBlockZ(), queryParams.area))
             );
-        } else if(worldSet) {
-            query = query.append("location", new BasicDBObject("world", setLocation.getWorld().getName()));
+        } else if(queryParams.worldSet) {
+            queryParams.query.put("location", new BasicDBObject("world", queryParams.setLocation.getWorld().getName()));
         }
 
         final long timeStart = System.nanoTime();
 
-        if(aggregationMode != null) {
-            query = query.append("type", "player_block_change");
+        if(queryParams.aggregationMode != null) {
+            queryParams.query.put("type", "player_block_change");
 
             ArrayList<DBObject> aggregationPipeline = new ArrayList<>();
 
-            aggregationPipeline.add(new BasicDBObject("$match", query));
+            aggregationPipeline.add(new BasicDBObject("$match", queryParams.query));
 
             BasicDBObject project = new BasicDBObject("_id", 0);
             project.put("blockFrom", 1);
@@ -198,7 +221,7 @@ public class FLCommand implements CommandExecutor {
             Collection<AggregationResult> results = null;
             String label = null;
 
-            switch(aggregationMode) {
+            switch(queryParams.aggregationMode) {
                 case PLAYERS:
                     label = "Player";
                     project.put("user_uuid", 1);
@@ -218,7 +241,7 @@ public class FLCommand implements CommandExecutor {
 
                     Map<String, AggregationResult> resultMap = new HashMap<>();
 
-                    query.append("blockFrom", new BasicDBObject("$ne", null));
+                    queryParams.query.put("blockFrom", new BasicDBObject("$ne", null));
                     groups.append("_id", "$blockFrom");
                     groups.append("value", new BasicDBObject("$sum", 1));
                     for(DBObject res : collection.aggregate(aggregationPipeline).results()) {
@@ -232,8 +255,8 @@ public class FLCommand implements CommandExecutor {
                         result.destroyed = (int)res.get("value");
                      }
 
-                    query.remove("blockFrom");
-                    query.append("blockTo", new BasicDBObject("$ne", null));
+                    queryParams.query.remove("blockFrom");
+                    queryParams.query.put("blockTo", new BasicDBObject("$ne", null));
                     groups.put("_id", "$blockTo");
                     groups.put("value", new BasicDBObject("$sum", 1));
                     for(DBObject res : collection.aggregate(aggregationPipeline).results()) {
@@ -252,9 +275,10 @@ public class FLCommand implements CommandExecutor {
 
             System.out.println(results);
         } else {
-            switch (performMode) {
+            switch (queryParams.performMode) {
                 case GET:
-                    DBCursor getCursor = collection.find(query.append("state", 0)).sort(sort);
+                    queryParams.query.put("state", 0);
+                    DBCursor getCursor = collection.find(queryParams.query).sort(queryParams.sort);
 
                     List<BaseAction> getActions = new ArrayList<>();
 
@@ -264,9 +288,8 @@ public class FLCommand implements CommandExecutor {
                     System.out.println(getActions);
                     break;
                 case ROLLBACK:
-                    query = query.append("state", 0);
-                    DBCursor cursor = collection.find(query).sort(new BasicDBObject("date", -1));
-                    //collection.updateMulti(query, new BasicDBObject("state", 1));
+                    queryParams.query.put("state", 0);
+                    DBCursor cursor = collection.find(queryParams.query).sort(new BasicDBObject("date", -1));
 
                     List<PlayerBlockAction> blockActions = new ArrayList<>();
                     List<PlayerInventoryAction> inventoryActions = new ArrayList<>();
@@ -300,9 +323,8 @@ public class FLCommand implements CommandExecutor {
                     }
                     break;
                 case REDO:
-                    query = query.append("state", 1);
-                    DBCursor cursor2 = collection.find(query).sort(new BasicDBObject("date", 1));
-                    //collection.updateMulti(query, new BasicDBObject("state", 0));
+                    queryParams.query.put("state", 1);
+                    DBCursor cursor2 = collection.find(queryParams.query).sort(new BasicDBObject("date", 1));
 
                     List<PlayerBlockAction> blockActions2 = new ArrayList<>();
                     List<PlayerInventoryAction> inventoryActions2 = new ArrayList<>();
