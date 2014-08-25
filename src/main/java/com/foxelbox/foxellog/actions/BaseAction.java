@@ -128,8 +128,9 @@ public abstract class BaseAction {
     }
 
     static Material getMaterial(DBObject fields, String name) {
-        if(fields.containsField(name))
-            return Material.getMaterial((String)fields.get(name));
+        Object value = fields.get(name);
+        if(value != null)
+            return Material.getMaterial((String)value);
         return Material.AIR;
     }
 
