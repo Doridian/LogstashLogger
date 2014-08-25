@@ -92,6 +92,8 @@ public class FLCommand implements CommandExecutor {
 
             switch(arg.toLowerCase()) {
                 case "self":
+                case "me":
+                case "myself":
                     query = query.append("user_uuid", ((Player)commandSender).getUniqueId());
                     i--;
                     break;
