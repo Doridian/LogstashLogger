@@ -18,7 +18,8 @@
 State:
     0 = in place
     1 = attempted rollback
-    2 = successful rollback
+    2 = gone
+    3 = attempted redo
 
 Rollback
 ====================================================================================
@@ -35,13 +36,13 @@ For entire change map, perform changes
 
 Redo
 ====================================================================================
-Get all matching documents, sorted by date desc, set state = 0, put into redo map {key = location}
+Get all matching documents, sorted by date desc, set state = 3, put into redo map {key = location}
 Make empty redo set
 Make empty change map {key = location, value = toBlock}
 For every location
-    a) Check for any newer changes on the location with state == 0. If found, remove all blocks with location from redo set
+    a) Check for any newer changes on the location with state == 3. If found, remove all blocks with location from redo set
     b) Chain down from current.blockFrom -> next.blockTo of current set of blocks
-    c) If the chain terminates, get blocks with state == 0 at same location to continue chain, if any found, append to current set of blocks, return to (b), otherwise do (d)
+    c) If the chain terminates, get blocks with state == 3 at same location to continue chain, if any found, append to current set of blocks, return to (b), otherwise do (d)
     d) End loop, add chain to redo set and end to change map
-For the entire rollback set, set state = 0
+For the entire redo set, set state = 0
 For entire change map, perform changes
