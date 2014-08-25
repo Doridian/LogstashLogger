@@ -1,6 +1,7 @@
 name: FoxelLog
 main: com.foxelbox.foxellog.FoxelLog
 version: 1.0.0
+softdepend: [WorldEdit]
 commands:
     fl:
         description: FoxelLog main command
