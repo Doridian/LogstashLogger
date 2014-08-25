@@ -20,6 +20,7 @@ import com.foxelbox.foxellog.FoxelLog;
 import com.foxelbox.foxellog.actions.BaseAction;
 import com.foxelbox.foxellog.actions.PlayerBlockAction;
 import com.foxelbox.foxellog.actions.PlayerInventoryAction;
+import com.foxelbox.foxellog.query.QueryParams;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
@@ -62,29 +63,6 @@ public class FLCommand implements CommandExecutor {
         }
     }
 
-    enum AggregationMode {
-        PLAYERS,
-        BLOCKS
-    }
-
-    enum PerformMode {
-        ROLLBACK,
-        REDO,
-        GET
-    }
-
-    public static class QueryParams implements Serializable {
-        BasicDBObject query = new BasicDBObject();
-        BasicDBObject sort = new BasicDBObject("date", -1);
-
-        AggregationMode aggregationMode = null;
-        PerformMode performMode = PerformMode.GET;
-
-        boolean worldSet = false;
-        Location setLocation = null;
-        int area = -1;
-    }
-
     private BasicDBObject makeRange(int pos, int range) {
         return new BasicDBObject("$gte", pos - range).append("$lte", pos + range);
     }
@@ -101,7 +79,7 @@ public class FLCommand implements CommandExecutor {
                 queryParams = lastQueryParams.get(myUUID);
 
         queryParams.aggregationMode = null;
-        queryParams.performMode = PerformMode.GET;
+        queryParams.performMode = QueryParams.PerformMode.GET;
 
         lastQueryParams.put(myUUID, queryParams);
 
@@ -164,29 +142,29 @@ public class FLCommand implements CommandExecutor {
                     i--; //Ignore!
                     break;
                 case "rollback":
-                    queryParams.performMode = PerformMode.ROLLBACK;
+                    queryParams.performMode = QueryParams.PerformMode.ROLLBACK;
                     i--;
                     break;
                 case "redo":
-                    queryParams.performMode = PerformMode.REDO;
+                    queryParams.performMode = QueryParams.PerformMode.REDO;
                     i--;
                     break;
                 case "sum":
                     switch(param.toLowerCase()) {
                         case "player":
                         case "players":
-                            queryParams.aggregationMode = AggregationMode.PLAYERS;
+                            queryParams.aggregationMode = QueryParams.AggregationMode.PLAYERS;
                             break;
                         case "block":
                         case "blocks":
-                            queryParams.aggregationMode = AggregationMode.BLOCKS;
+                            queryParams.aggregationMode = QueryParams.AggregationMode.BLOCKS;
                             break;
                     }
                     break;
             }
         }
 
-        if(queryParams.performMode != PerformMode.GET && queryParams.aggregationMode != null) {
+        if(queryParams.performMode != QueryParams.PerformMode.GET && queryParams.aggregationMode != null) {
             commandSender.sendMessage("You can only use the display/default mode while aggregation/sum is turned on!");
             return false;
         }
