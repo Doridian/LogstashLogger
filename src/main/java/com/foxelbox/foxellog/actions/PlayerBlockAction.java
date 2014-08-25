@@ -58,4 +58,26 @@ public class PlayerBlockAction extends BaseAction {
     public Material getBlockTo() {
         return blockTo;
     }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        if (!super.equals(o)) return false;
+
+        PlayerBlockAction that = (PlayerBlockAction) o;
+
+        if (blockFrom != that.blockFrom) return false;
+        if (blockTo != that.blockTo) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = super.hashCode();
+        result = 31 * result + blockFrom.hashCode();
+        result = 31 * result + blockTo.hashCode();
+        return result;
+    }
 }

@@ -18,10 +18,14 @@ package com.foxelbox.foxellog.commands;
 
 import com.foxelbox.foxellog.FoxelLog;
 import com.foxelbox.foxellog.actions.BaseAction;
+import com.foxelbox.foxellog.actions.PlayerBlockAction;
+import com.foxelbox.foxellog.actions.PlayerInventoryAction;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
 import com.mongodb.DBCursor;
 import com.mongodb.DBObject;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
@@ -62,14 +66,20 @@ public class FLCommand implements CommandExecutor {
         BLOCKS
     }
 
+    enum PerformMode {
+        ROLLBACK,
+        REDO,
+        GET
+    }
+
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String commandName, String[] args) {
         DBCollection collection = plugin.getMongoDB().getCollection(BaseAction.getCollection());
         BasicDBObject query = new BasicDBObject();
-        BasicDBObject sort = new BasicDBObject();
+        BasicDBObject sort = new BasicDBObject("date", -1);
 
-        ArrayList<DBObject> aggregationPipeline = null;
         AggregationMode aggregationMode = null;
+        PerformMode performMode = PerformMode.GET;
 
         for(int i = 0; i < args.length; i += 2) {
             final String arg = args[i];
@@ -83,6 +93,14 @@ public class FLCommand implements CommandExecutor {
             switch(arg.toLowerCase()) {
                 case "self":
                     query = query.append("user_uuid", ((Player)commandSender).getUniqueId());
+                    i--;
+                    break;
+                case "rollback":
+                    performMode = PerformMode.ROLLBACK;
+                    i--;
+                    break;
+                case "redo":
+                    performMode = PerformMode.REDO;
                     i--;
                     break;
                 case "player":
@@ -100,13 +118,19 @@ public class FLCommand implements CommandExecutor {
                             aggregationMode = AggregationMode.BLOCKS;
                             break;
                     }
-
                     break;
             }
         }
 
+        if(performMode != PerformMode.GET && aggregationMode != null) {
+            commandSender.sendMessage("You can only use the display/default mode while aggregation/sum is turned on!");
+            return false;
+        }
+
+        final long timeStart = System.nanoTime();
+
         if(aggregationMode != null) {
-            aggregationPipeline = new ArrayList<>();
+            ArrayList<DBObject> aggregationPipeline = new ArrayList<>();
 
             aggregationPipeline.add(new BasicDBObject("$match", query));
 
@@ -122,9 +146,12 @@ public class FLCommand implements CommandExecutor {
             aggregationPipeline.add(new BasicDBObject("$group", groups));
 
             Collection<AggregationResult> results = null;
+            String label = null;
 
             switch(aggregationMode) {
                 case PLAYERS:
+                    label = "Player";
+
                     project.put("user_uuid", 1);
 
                     groups.append("_id", "$user_uuid");
@@ -138,6 +165,8 @@ public class FLCommand implements CommandExecutor {
                     }
                     break;
                 case BLOCKS:
+                    label = "Block";
+
                     //project.put("user_uuid", 0);
 
                     Map<String, AggregationResult> resultMap = new HashMap<>();
@@ -176,16 +205,89 @@ public class FLCommand implements CommandExecutor {
 
             System.out.println(results);
         } else {
-            DBCursor cursor = collection.find(query).sort(sort);
+            switch (performMode) {
+                case GET:
+                    DBCursor getCursor = collection.find(query.append("state", 0)).sort(sort);
 
-            final long timeStart = System.nanoTime();
-            //final List<BaseAction> actions = plugin.getChangeQueryInterface().queryActions(query);
-            final long timeEnd = System.nanoTime();
+                    List<BaseAction> getActions = new ArrayList<>();
 
-            commandSender.sendMessage("Time taken: " + (((double) (timeEnd - timeStart)) / 1000000000D) + " seconds");
+                    for(DBObject dbObject : getCursor)
+                        getActions.add(BaseAction.craftActionByTypeAndDBObject(dbObject));
 
-            //System.out.println(actions);
+                    System.out.println(getActions);
+                    break;
+                case ROLLBACK:
+                    query = query.append("state", 0);
+                    DBCursor cursor = collection.find(query).sort(new BasicDBObject("date", -1));
+                    collection.updateMulti(query, new BasicDBObject("state", 1));
+
+                    List<PlayerBlockAction> blockActions = new ArrayList<>();
+                    List<PlayerInventoryAction> inventoryActions = new ArrayList<>();
+
+                    for(DBObject dbObject : cursor) {
+                        BaseAction action = BaseAction.craftActionByTypeAndDBObject(dbObject);
+                        if(action instanceof PlayerBlockAction)
+                            blockActions.add((PlayerBlockAction)action);
+                        else if(action instanceof PlayerInventoryAction)
+                            inventoryActions.add((PlayerInventoryAction)action);
+                    }
+
+                    Map<Location, Material> setMaterials = new HashMap<>();
+
+                    for(PlayerBlockAction action : blockActions) {
+                        Material currentMaterial;
+                        Location currentLocation = action.getLocation();
+                        if (!setMaterials.containsKey(currentLocation))
+                            setMaterials.put(currentLocation, currentLocation.getBlock().getType());
+                        currentMaterial = setMaterials.get(currentLocation);
+
+                        if (currentMaterial.equals(action.getBlockTo()))
+                            setMaterials.put(currentLocation, action.getBlockFrom());
+                    }
+
+                    for(Map.Entry<Location, Material> setMaterial : setMaterials.entrySet()) {
+                        setMaterial.getKey().getBlock().setType(setMaterial.getValue());
+                    }
+                    break;
+                case REDO:
+                    query = query.append("state", 1);
+                    DBCursor cursor2 = collection.find(query).sort(new BasicDBObject("date", 1));
+                    collection.updateMulti(query, new BasicDBObject("state", 0));
+
+                    List<PlayerBlockAction> blockActions2 = new ArrayList<>();
+                    List<PlayerInventoryAction> inventoryActions2 = new ArrayList<>();
+
+                    for(DBObject dbObject : cursor2) {
+                        BaseAction action = BaseAction.craftActionByTypeAndDBObject(dbObject);
+                        if(action instanceof PlayerBlockAction)
+                            blockActions2.add((PlayerBlockAction)action);
+                        else if(action instanceof PlayerInventoryAction)
+                            inventoryActions2.add((PlayerInventoryAction)action);
+                    }
+
+                    Map<Location, Material> setMaterials2 = new HashMap<>();
+
+                    for(PlayerBlockAction action : blockActions2) {
+                        Material currentMaterial;
+                        Location currentLocation = action.getLocation();
+                        if (!setMaterials2.containsKey(currentLocation))
+                            setMaterials2.put(currentLocation, currentLocation.getBlock().getType());
+                        currentMaterial = setMaterials2.get(currentLocation);
+
+                        if (currentMaterial.equals(action.getBlockFrom()))
+                            setMaterials2.put(currentLocation, action.getBlockTo());
+                    }
+
+                    for(Map.Entry<Location, Material> setMaterial : setMaterials2.entrySet()) {
+                        setMaterial.getKey().getBlock().setType(setMaterial.getValue());
+                    }
+                    break;
+            }
         }
+
+        final long timeEnd = System.nanoTime();
+
+        commandSender.sendMessage("Time taken: " + (((double) (timeEnd - timeStart)) / 1000000000D) + " seconds");
 
         return true;
     }

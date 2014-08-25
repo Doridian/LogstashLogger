@@ -34,6 +34,7 @@ public abstract class BaseAction {
 	private final Date date;
     private final HumanEntity user;
     private final Location location;
+    private final Object dbID;
 
     public abstract String getActionType();
 
@@ -45,9 +46,11 @@ public abstract class BaseAction {
         this.date = new Date();
         this.user = user;
         this.location = location;
+        this.dbID = null;
     }
 
     protected BaseAction(DBObject fields) {
+        dbID = fields.get("_id");
         date = (Date)fields.get("date");
         user = FoxelLog.instance.getServer().getPlayer((UUID)fields.get("user_uuid"));
 
@@ -74,6 +77,8 @@ public abstract class BaseAction {
         //builder.field("user_name", user.getName());
         builder.append("user_uuid", user.getUniqueId());
 
+        builder.append("state", 0);
+
 		return builder;
 	}
 
@@ -87,6 +92,10 @@ public abstract class BaseAction {
 
     public Location getLocation() {
         return location;
+    }
+
+    public Object getDbID() {
+        return dbID;
     }
 
     private final static Map<String, Class<? extends BaseAction>> typeToClassMap = new HashMap<>();
@@ -110,9 +119,9 @@ public abstract class BaseAction {
         return typeToClassMap.keySet();
     }
 
-    public static BaseAction craftActionByTypeAndDBObject(String type, DBObject fields) {
+    public static BaseAction craftActionByTypeAndDBObject(DBObject fields) {
         try {
-            return typeToCtorMap.get(type).newInstance(fields);
+            return typeToCtorMap.get((String)fields.get("type")).newInstance(fields);
         } catch (IllegalAccessException|InvocationTargetException|InstantiationException e) {
             throw new RuntimeException(e);
         }
@@ -129,5 +138,27 @@ public abstract class BaseAction {
             fields.append(name, null);
         else
             fields.append(name, material.name());
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+
+        BaseAction action = (BaseAction) o;
+
+        if (!date.equals(action.date)) return false;
+        if (!location.equals(action.location)) return false;
+        if (!user.equals(action.user)) return false;
+
+        return true;
+    }
+
+    @Override
+    public int hashCode() {
+        int result = date.hashCode();
+        result = 31 * result + user.hashCode();
+        result = 31 * result + location.hashCode();
+        return result;
     }
 }
