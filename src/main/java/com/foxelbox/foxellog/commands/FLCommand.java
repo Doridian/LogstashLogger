@@ -134,7 +134,7 @@ public class FLCommand implements CommandExecutor {
 
                     results = new ArrayList<>();
                     for(DBObject res : collection.aggregate(aggregationPipeline).results()) {
-                        results.add(new AggregationResult(plugin.getServer().getPlayer((UUID)res.get("_id")).getName(), (int)res.get("placed"), (int)res.get("destroyed")));
+                        results.add(new AggregationResult(plugin.getServer().getOfflinePlayer((UUID)res.get("_id")).getName(), (int)res.get("placed"), (int)res.get("destroyed")));
                     }
                     break;
                 case BLOCKS:
