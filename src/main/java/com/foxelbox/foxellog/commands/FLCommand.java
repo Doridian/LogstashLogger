@@ -219,7 +219,7 @@ public class FLCommand implements CommandExecutor {
                 case ROLLBACK:
                     query = query.append("state", 0);
                     DBCursor cursor = collection.find(query).sort(new BasicDBObject("date", -1));
-                    collection.updateMulti(query, new BasicDBObject("state", 1));
+                    //collection.updateMulti(query, new BasicDBObject("state", 1));
 
                     List<PlayerBlockAction> blockActions = new ArrayList<>();
                     List<PlayerInventoryAction> inventoryActions = new ArrayList<>();
@@ -241,8 +241,10 @@ public class FLCommand implements CommandExecutor {
                             setMaterials.put(currentLocation, currentLocation.getBlock().getType());
                         currentMaterial = setMaterials.get(currentLocation);
 
-                        if (currentMaterial.equals(action.getBlockTo()))
+                        if (currentMaterial.equals(action.getBlockTo())) {
+                            collection.update(new BasicDBObject("_id", action.getDbID()), new BasicDBObject("state", 1));
                             setMaterials.put(currentLocation, action.getBlockFrom());
+                        }
                     }
 
                     for(Map.Entry<Location, Material> setMaterial : setMaterials.entrySet()) {
@@ -252,7 +254,7 @@ public class FLCommand implements CommandExecutor {
                 case REDO:
                     query = query.append("state", 1);
                     DBCursor cursor2 = collection.find(query).sort(new BasicDBObject("date", 1));
-                    collection.updateMulti(query, new BasicDBObject("state", 0));
+                    //collection.updateMulti(query, new BasicDBObject("state", 0));
 
                     List<PlayerBlockAction> blockActions2 = new ArrayList<>();
                     List<PlayerInventoryAction> inventoryActions2 = new ArrayList<>();
@@ -274,8 +276,10 @@ public class FLCommand implements CommandExecutor {
                             setMaterials2.put(currentLocation, currentLocation.getBlock().getType());
                         currentMaterial = setMaterials2.get(currentLocation);
 
-                        if (currentMaterial.equals(action.getBlockFrom()))
+                        if (currentMaterial.equals(action.getBlockFrom())) {
+                            collection.update(new BasicDBObject("_id", action.getDbID()), new BasicDBObject("state", 0));
                             setMaterials2.put(currentLocation, action.getBlockTo());
+                        }
                     }
 
                     for(Map.Entry<Location, Material> setMaterial : setMaterials2.entrySet()) {
