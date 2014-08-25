@@ -37,8 +37,8 @@ public class PlayerInventoryAction extends BaseAction {
     protected PlayerInventoryAction(DBObject fields) {
         super(fields);
         this.amount = (Integer)fields.get("amount");
-        this.block = Material.getMaterial((String)fields.get("block"));
-        this.container = Material.getMaterial((String)fields.get("container"));
+        this.block = getMaterial(fields, "block");
+        this.container = getMaterial(fields, "container");
     }
 
     @Override
@@ -50,8 +50,8 @@ public class PlayerInventoryAction extends BaseAction {
     protected BasicDBObject toBasicDBObject(BasicDBObject builder) {
         builder = super.toBasicDBObject(builder);
 
-		builder.append("block", block.name());
-		builder.append("container", container.name());
+        storeMaterial(builder, "block", block);
+        storeMaterial(builder, "container", container);
 		builder.append("amount", amount);
 
 		return builder;

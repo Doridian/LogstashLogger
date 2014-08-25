@@ -31,11 +31,10 @@ public class PlayerBlockAction extends BaseAction {
 		this.blockFrom = blockFrom;
 		this.blockTo = blockTo;
 	}
-
     protected PlayerBlockAction(DBObject fields) {
         super(fields);
-        this.blockFrom = Material.getMaterial((String)fields.get("blockFrom"));
-        this.blockTo = Material.getMaterial((String)fields.get("blockTo"));
+        this.blockFrom = getMaterial(fields, "blockFrom");
+        this.blockTo = getMaterial(fields, "blockTo");
     }
 
     @Override
@@ -46,8 +45,8 @@ public class PlayerBlockAction extends BaseAction {
     protected BasicDBObject toBasicDBObject(BasicDBObject builder) {
         builder = super.toBasicDBObject(builder);
 
-		builder.append("blockFrom", blockFrom.name());
-		builder.append("blockTo", blockTo.name());
+        storeMaterial(builder, "blockFrom", blockFrom);
+        storeMaterial(builder, "blockTo", blockTo);
 
 		return builder;
 	}

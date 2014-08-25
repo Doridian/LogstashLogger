@@ -34,8 +34,6 @@ public class FoxelLog extends JavaPlugin {
     private MongoClient mongoClient;
     private DB mongoDB;
 
-    private ChangeQueryInterface changeQueryInterface;
-
     public DB getMongoDB() {
         return mongoDB;
     }
@@ -61,16 +59,12 @@ public class FoxelLog extends JavaPlugin {
         listener = new LoggerListener(this);
 		getServer().getPluginManager().registerEvents(listener, this);
 
-        getServer().getPluginCommand("fl").setExecutor(new FLCommand(this));
-
-        changeQueryInterface = new ChangeQueryInterface(this);
+        FLCommand flCommand = new FLCommand(this);
+        getServer().getPluginCommand("fl").setExecutor(flCommand);
+        getServer().getPluginCommand("lb").setExecutor(flCommand);
 
         listener.enable();
 	}
-
-    public ChangeQueryInterface getChangeQueryInterface() {
-        return changeQueryInterface;
-    }
 
     @Override
     public void onDisable() {

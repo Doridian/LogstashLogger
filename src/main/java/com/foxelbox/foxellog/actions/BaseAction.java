@@ -21,6 +21,7 @@ import com.foxelbox.foxellog.util.ClassUtils;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBObject;
 import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.HumanEntity;
 import org.objenesis.ObjenesisStd;
 
@@ -115,5 +116,18 @@ public abstract class BaseAction {
         } catch (IllegalAccessException|InvocationTargetException|InstantiationException e) {
             throw new RuntimeException(e);
         }
+    }
+
+    static Material getMaterial(DBObject fields, String name) {
+        if(fields.containsField(name))
+            return Material.getMaterial((String)fields.get(name));
+        return Material.AIR;
+    }
+
+    static void storeMaterial(BasicDBObject fields, String name, Material material) {
+        if(material == Material.AIR)
+            fields.append(name, null);
+        else
+            fields.append(name, material.name());
     }
 }
