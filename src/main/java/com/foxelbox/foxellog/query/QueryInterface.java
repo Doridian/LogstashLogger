@@ -1,6 +1,7 @@
 package com.foxelbox.foxellog.query;
 
 import com.foxelbox.foxellog.FoxelLog;
+import com.foxelbox.foxellog.actions.ActionState;
 import com.foxelbox.foxellog.actions.BaseAction;
 import com.foxelbox.foxellog.actions.PlayerBlockAction;
 import com.foxelbox.foxellog.actions.PlayerInventoryAction;
@@ -178,7 +179,7 @@ public class QueryInterface {
 
         switch (queryParams.performMode) {
             case GET:
-                queryParams.query.put("state", 0);
+                queryParams.query.put("state", ActionState.IN_PLACE.getDbVal());
                 DBCursor getCursor = collection.find(queryParams.query).sort(queryParams.sort);
 
                 List<BaseAction> getActions = new ArrayList<>();
@@ -188,7 +189,7 @@ public class QueryInterface {
 
                 return new QueryResults(getActions.size(), getActions);
             case ROLLBACK:
-                queryParams.query.put("state", 0);
+                queryParams.query.put("state", ActionState.IN_PLACE.getDbVal());
                 DBCursor cursor = collection.find(queryParams.query).sort(new BasicDBObject("date", -1));
 
                 List<PlayerBlockAction> blockActions = new ArrayList<>();
@@ -212,7 +213,7 @@ public class QueryInterface {
                     currentMaterial = setMaterials.get(currentLocation);
 
                     if (currentMaterial.equals(action.getBlockTo())) {
-                        action.state = 1;
+                        action.state = ActionState.GONE;
                         collection.update(new BasicDBObject("_id", action.getDbID()), action.toDBObject());
                         setMaterials.put(currentLocation, action.getBlockFrom());
                     }
@@ -227,7 +228,7 @@ public class QueryInterface {
 
                 return new QueryResults(count, null);
             case REDO:
-                queryParams.query.put("state", 1);
+                queryParams.query.put("state", ActionState.GONE.getDbVal());
                 DBCursor cursor2 = collection.find(queryParams.query).sort(new BasicDBObject("date", 1));
 
                 List<PlayerBlockAction> blockActions2 = new ArrayList<>();
@@ -251,7 +252,7 @@ public class QueryInterface {
                     currentMaterial = setMaterials2.get(currentLocation);
 
                     if (currentMaterial.equals(action.getBlockFrom())) {
-                        action.state = 0;
+                        action.state = ActionState.IN_PLACE;
                         collection.update(new BasicDBObject("_id", action.getDbID()), action.toDBObject());
                         setMaterials2.put(currentLocation, action.getBlockTo());
                     }
