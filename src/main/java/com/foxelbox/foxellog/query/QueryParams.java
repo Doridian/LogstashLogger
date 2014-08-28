@@ -22,15 +22,15 @@ import org.bukkit.Location;
 import java.io.Serializable;
 
 public class QueryParams implements Serializable {
-    public enum AggregationMode {
-        PLAYERS,
-        BLOCKS
-    }
-
     public enum PerformMode {
         ROLLBACK,
         REDO,
         GET
+    }
+
+    public enum AggregationMode {
+        PLAYERS,
+        BLOCKS
     }
 
     public BasicDBObject query = new BasicDBObject();

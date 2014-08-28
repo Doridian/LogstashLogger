@@ -20,6 +20,8 @@ import com.foxelbox.foxellog.FoxelLog;
 import com.foxelbox.foxellog.actions.BaseAction;
 import com.foxelbox.foxellog.actions.PlayerBlockAction;
 import com.foxelbox.foxellog.actions.PlayerInventoryAction;
+import com.foxelbox.foxellog.query.AggregationResult;
+import com.foxelbox.foxellog.query.QueryInterface;
 import com.foxelbox.foxellog.query.QueryParams;
 import com.mongodb.BasicDBObject;
 import com.mongodb.DBCollection;
@@ -32,7 +34,6 @@ import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 import org.bukkit.entity.Player;
 
-import java.io.Serializable;
 import java.util.*;
 
 public class FLCommand implements CommandExecutor {
@@ -42,37 +43,22 @@ public class FLCommand implements CommandExecutor {
         this.plugin = plugin;
     }
 
-    private class AggregationResult {
-        public final String label;
-        public int placed = 0;
-        public int destroyed = 0;
-
-        private AggregationResult(String label) {
-            this(label, 0, 0);
-        }
-
-        private AggregationResult(String label, int placed, int destroyed) {
-            this.label = label;
-            this.placed = placed;
-            this.destroyed = destroyed;
-        }
-
-        @Override
-        public String toString() {
-            return "{" + label + "+" + placed + "-" + destroyed + "}";
-        }
-    }
-
     private BasicDBObject makeRange(int pos, int range) {
         return new BasicDBObject("$gte", pos - range).append("$lte", pos + range);
     }
 
     private final HashMap<UUID, QueryParams> lastQueryParams = new HashMap<>();
 
+    public static final UUID CONSOLE_UUID = UUID.nameUUIDFromBytes("COMMANDSENDER:CONSOLE".getBytes());
+
     @Override
     public boolean onCommand(CommandSender commandSender, Command command, String commandName, String[] argsRaw) {
         QueryParams queryParams = new QueryParams();
-        UUID myUUID = ((Player) commandSender).getUniqueId();
+        final UUID myUUID;
+        if(commandSender instanceof Player)
+            myUUID = ((Player)commandSender).getUniqueId();
+        else
+            myUUID = CONSOLE_UUID;
 
         for(String arg : argsRaw)
             if(arg.equalsIgnoreCase("last"))
@@ -82,8 +68,6 @@ public class FLCommand implements CommandExecutor {
         queryParams.performMode = QueryParams.PerformMode.GET;
 
         lastQueryParams.put(myUUID, queryParams);
-
-        DBCollection collection = plugin.getMongoDB().getCollection(BaseAction.getCollection());
 
         if(queryParams.setLocation == null)
             queryParams.setLocation = (commandSender instanceof Player) ? ((Player)commandSender).getLocation() : new Location(plugin.getServer().getWorlds().get(0), 0, 0, 0);
@@ -102,7 +86,7 @@ public class FLCommand implements CommandExecutor {
                     final Set<UUID> playersToMatch = new HashSet<>();
                     for(final String ply : param.split(",")) {
                         if (ply.equals("self") || ply.equals("myself") || ply.equals("me"))
-                            playersToMatch.add(((Player) commandSender).getUniqueId());
+                            playersToMatch.add(myUUID);
                         else
                             playersToMatch.add(plugin.getServer().getPlayer(param).getUniqueId());
                     }
@@ -164,183 +148,15 @@ public class FLCommand implements CommandExecutor {
             }
         }
 
-        if(queryParams.performMode != QueryParams.PerformMode.GET && queryParams.aggregationMode != null) {
-            commandSender.sendMessage("You can only use the display/default mode while aggregation/sum is turned on!");
-            return false;
-        }
-
-        if(queryParams.area >= 0) {
-            queryParams.query.put("location",
-                    new BasicDBObject("world", queryParams.setLocation.getWorld().getName())
-                        .append("x", makeRange(queryParams.setLocation.getBlockX(), queryParams.area))
-                        .append("y", makeRange(queryParams.setLocation.getBlockY(), queryParams.area))
-                        .append("z", makeRange(queryParams.setLocation.getBlockZ(), queryParams.area))
-            );
-        } else if(queryParams.worldSet) {
-            queryParams.query.put("location", new BasicDBObject("world", queryParams.setLocation.getWorld().getName()));
-        }
-
-        final long timeStart = System.nanoTime();
-
-        if(queryParams.aggregationMode != null) {
-            queryParams.query.put("type", "player_block_change");
-
-            ArrayList<DBObject> aggregationPipeline = new ArrayList<>();
-
-            aggregationPipeline.add(new BasicDBObject("$match", queryParams.query));
-
-            BasicDBObject project = new BasicDBObject("_id", 0);
-            project.put("blockFrom", 1);
-            project.put("blockTo", 1);
-            aggregationPipeline.add(new BasicDBObject("$project", project));
-            BasicDBObject groups = new BasicDBObject();
-            aggregationPipeline.add(new BasicDBObject("$group", groups));
-
-            Collection<AggregationResult> results = null;
-            String label = null;
-
-            switch(queryParams.aggregationMode) {
-                case PLAYERS:
-                    label = "Player";
-                    project.put("user_uuid", 1);
-
-                    groups.append("_id", "$user_uuid");
-
-                    groups.append("placed", new BasicDBObject("$sum", new BasicDBObject("$cond", Arrays.asList(new BasicDBObject("$eq", Arrays.asList("$blockTo", null)), 0, 1))));
-                    groups.append("destroyed", new BasicDBObject("$sum", new BasicDBObject("$cond", Arrays.asList(new BasicDBObject("$eq", Arrays.asList("$blockFrom", null)), 0, 1))));
-
-                    results = new ArrayList<>();
-                    for(DBObject res : collection.aggregate(aggregationPipeline).results()) {
-                        results.add(new AggregationResult(plugin.getServer().getOfflinePlayer((UUID)res.get("_id")).getName(), (int)res.get("placed"), (int)res.get("destroyed")));
-                    }
-                    break;
-                case BLOCKS:
-                    label = "Block";
-
-                    Map<String, AggregationResult> resultMap = new HashMap<>();
-
-                    queryParams.query.put("blockFrom", new BasicDBObject("$ne", null));
-                    groups.append("_id", "$blockFrom");
-                    groups.append("value", new BasicDBObject("$sum", 1));
-                    for(DBObject res : collection.aggregate(aggregationPipeline).results()) {
-                        System.out.println(res.toMap());
-                        String key = (String)res.get("_id");
-                        AggregationResult result = resultMap.get(key);
-                        if(result == null) {
-                            result = new AggregationResult(key);
-                            resultMap.put(key, result);
-                        }
-                        result.destroyed = (int)res.get("value");
-                     }
-
-                    queryParams.query.remove("blockFrom");
-                    queryParams.query.put("blockTo", new BasicDBObject("$ne", null));
-                    groups.put("_id", "$blockTo");
-                    groups.put("value", new BasicDBObject("$sum", 1));
-                    for(DBObject res : collection.aggregate(aggregationPipeline).results()) {
-                        String key = (String)res.get("_id");
-                        AggregationResult result = resultMap.get(key);
-                        if(result == null) {
-                            result = new AggregationResult(key);
-                            resultMap.put(key, result);
-                        }
-                        result.placed = (int)res.get("value");
-                    }
-
-                    results = resultMap.values();
-                    break;
+        try {
+            if (queryParams.aggregationMode == null) {
+                plugin.getQueryInterface().doNormalQuery(queryParams);
+            } else {
+                plugin.getQueryInterface().doAggregatedQuery(queryParams);
             }
-
-            System.out.println(results);
-        } else {
-            switch (queryParams.performMode) {
-                case GET:
-                    queryParams.query.put("state", 0);
-                    DBCursor getCursor = collection.find(queryParams.query).sort(queryParams.sort);
-
-                    List<BaseAction> getActions = new ArrayList<>();
-
-                    for(DBObject dbObject : getCursor)
-                        getActions.add(BaseAction.craftActionByTypeAndDBObject(dbObject));
-
-                    System.out.println(getActions);
-                    break;
-                case ROLLBACK:
-                    queryParams.query.put("state", 0);
-                    DBCursor cursor = collection.find(queryParams.query).sort(new BasicDBObject("date", -1));
-
-                    List<PlayerBlockAction> blockActions = new ArrayList<>();
-                    List<PlayerInventoryAction> inventoryActions = new ArrayList<>();
-
-                    for(DBObject dbObject : cursor) {
-                        BaseAction action = BaseAction.craftActionByTypeAndDBObject(dbObject);
-                        if(action instanceof PlayerBlockAction)
-                            blockActions.add((PlayerBlockAction)action);
-                        else if(action instanceof PlayerInventoryAction)
-                            inventoryActions.add((PlayerInventoryAction)action);
-                    }
-
-                    Map<Location, Material> setMaterials = new HashMap<>();
-
-                    for(PlayerBlockAction action : blockActions) {
-                        Material currentMaterial;
-                        Location currentLocation = action.getLocation();
-                        if (!setMaterials.containsKey(currentLocation))
-                            setMaterials.put(currentLocation, currentLocation.getBlock().getType());
-                        currentMaterial = setMaterials.get(currentLocation);
-
-                        if (currentMaterial.equals(action.getBlockTo())) {
-                            action.state = 1;
-                            collection.update(new BasicDBObject("_id", action.getDbID()), action.toDBObject());
-                            setMaterials.put(currentLocation, action.getBlockFrom());
-                        }
-                    }
-
-                    for(Map.Entry<Location, Material> setMaterial : setMaterials.entrySet()) {
-                        setMaterial.getKey().getBlock().setType(setMaterial.getValue());
-                    }
-                    break;
-                case REDO:
-                    queryParams.query.put("state", 1);
-                    DBCursor cursor2 = collection.find(queryParams.query).sort(new BasicDBObject("date", 1));
-
-                    List<PlayerBlockAction> blockActions2 = new ArrayList<>();
-                    List<PlayerInventoryAction> inventoryActions2 = new ArrayList<>();
-
-                    for(DBObject dbObject : cursor2) {
-                        BaseAction action = BaseAction.craftActionByTypeAndDBObject(dbObject);
-                        if(action instanceof PlayerBlockAction)
-                            blockActions2.add((PlayerBlockAction)action);
-                        else if(action instanceof PlayerInventoryAction)
-                            inventoryActions2.add((PlayerInventoryAction)action);
-                    }
-
-                    Map<Location, Material> setMaterials2 = new HashMap<>();
-
-                    for(PlayerBlockAction action : blockActions2) {
-                        Material currentMaterial;
-                        Location currentLocation = action.getLocation();
-                        if (!setMaterials2.containsKey(currentLocation))
-                            setMaterials2.put(currentLocation, currentLocation.getBlock().getType());
-                        currentMaterial = setMaterials2.get(currentLocation);
-
-                        if (currentMaterial.equals(action.getBlockFrom())) {
-                            action.state = 0;
-                            collection.update(new BasicDBObject("_id", action.getDbID()), action.toDBObject());
-                            setMaterials2.put(currentLocation, action.getBlockTo());
-                        }
-                    }
-
-                    for(Map.Entry<Location, Material> setMaterial : setMaterials2.entrySet()) {
-                        setMaterial.getKey().getBlock().setType(setMaterial.getValue());
-                    }
-                    break;
-            }
+        } catch (QueryInterface.QueryException e) {
+            commandSender.sendMessage(e.getMessage());
         }
-
-        final long timeEnd = System.nanoTime();
-
-        commandSender.sendMessage("Time taken: " + (((double) (timeEnd - timeStart)) / 1000000000D) + " seconds");
 
         return true;
     }

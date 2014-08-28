@@ -18,6 +18,7 @@ package com.foxelbox.foxellog;
 
 import com.foxelbox.dependencies.config.Configuration;
 import com.foxelbox.foxellog.commands.FLCommand;
+import com.foxelbox.foxellog.query.QueryInterface;
 import com.mongodb.DB;
 import com.mongodb.MongoClient;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -34,8 +35,14 @@ public class FoxelLog extends JavaPlugin {
     private MongoClient mongoClient;
     private DB mongoDB;
 
+    private QueryInterface queryInterface;
+
     public DB getMongoDB() {
         return mongoDB;
+    }
+
+    public QueryInterface getQueryInterface() {
+        return queryInterface;
     }
 
 	@Override
@@ -56,6 +63,8 @@ public class FoxelLog extends JavaPlugin {
             throw new RuntimeException(e);
         }
 
+        queryInterface = new QueryInterface(this);
+
         listener = new LoggerListener(this);
 		getServer().getPluginManager().registerEvents(listener, this);
 
@@ -70,5 +79,6 @@ public class FoxelLog extends JavaPlugin {
     public void onDisable() {
         listener.disable();
         mongoClient.close();
+        queryInterface = null;
     }
 }
